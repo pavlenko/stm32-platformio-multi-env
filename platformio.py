@@ -67,9 +67,6 @@ def resolve_src_include_only():
             )
             src_include_only.append(inc)
 
-        print(os.path.join(hal_driver_dir, "Inc"))
-        pprint(src_include_only)
-
 
 def middleware(env, node):
     resolve_src_include_only()
