@@ -19,80 +19,69 @@ MCU_FAMILY = MCU[0:7]
 FRAMEWORK_DIR = platform.get_package_dir("framework-stm32cube%s" % MCU[5:7])
 TOOLCHAIN_DIR = platform.get_package_dir("toolchain-gccarmnoneeabi")
 
+hal_driver_dir = os.path.join(FRAMEWORK_DIR, "Drivers", MCU_FAMILY.upper() + "xx_HAL_Driver")
+hal_config_name = MCU_FAMILY + "xx_hal_conf.h"
 
-# STM8 version
-# env.BuildSources(
-#     join("$BUILD_DIR", "SPL"),
-#     join(FRAMEWORK_DIR, "Libraries", "STM8S_StdPeriph_Driver", "src"),
-#     src_filter=["-<*>"] + [" +<%s>" % f for f in get_core_files()]
-# )
+print("HAL compilation speedup")
+print("HAL DRIVER DIR: " + hal_driver_dir)
+print("HAL CONFIG NAME: " + hal_config_name)
 
-def get_core_files():
-    # system_conf = os.path.join(
-    #     FRAMEWORK_DIR,
-    #     "Drivers",
-    #     MCU_FAMILY + "xx_HAL_Driver",
-    #     "Inc",
-    #     MCU_FAMILY + "xx_hal_conf.h"
-    # )
-    project_conf = os.path.join(env["PROJECT_DIR"], "env", "bootloader", "src", MCU_FAMILY + "xx_hal_conf.h")
+if board.get("build.stm32cube.custom_config_header", "no") == "yes":
+    hal_config_path = os.path.join(env["PROJECT_DIR"], "env", "bootloader", "src", hal_config_name)
+else:
+    hal_config_path = os.path.join(hal_driver_dir, "Inc", hal_config_name)
 
-    # TODO check which HAL config to check
-    # Check if project HAL config exists
-    if not os.path.isfile(project_conf):
-        sys.stderr.write("Error: Couldn't find " + project_conf + " file!\n")
-        return []
+print("HAL CONFIG PATH: " + hal_config_path)
 
-    # Create command for resolve required headers
-    command = [TOOLCHAIN_DIR + "/bin/" + env.subst("$CC")]
-    command += env.subst("${TEMPFILE('$CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES','$CCCOMSTR')}").split(' ')
-    command += ["-W", "-MM", "-E", project_conf]
-
-    result = exec_command(
-        command,
-        cwd=TOOLCHAIN_DIR + "/bin",
-        env=env['ENV']
-    )
-
-    if result['returncode'] != 0:
-        sys.stderr.write("Error: Could not parse library files for the target.\n")
-        sys.stderr.write(result['err'])
-        env.Exit(1)
-
-    src_files = []
-    includes = result['out']
-    for inc in includes.split(" "):
-        if "_" not in inc or ".h" not in inc or "conf" in inc:
-            continue
-        src_files.append(os.path.basename(inc).replace(".h", ".c").strip())
-        # src_files.append(inc.replace(".h", ".c").strip())
-
-    pprint(src_files)
-    # env.Exit(0)
-    return src_files
+src_include_only = None
 
 
-# TODO init all required vars
-#      add src_filter array and fill it only when requested
-# get_core_files()
+def resolve_src_include_only():
+    global src_include_only
 
-# pprint(vars(env))
-# env.Exit(0)
+    if not os.path.isfile(hal_config_path):
+        sys.stderr.write("Error: Couldn't find " + hal_config_path + " file!\n")
+        src_include_only = []
 
+    if src_include_only is None:
+        command = [TOOLCHAIN_DIR + "/bin/" + env.subst("$CC")]
+        command += env.subst("${TEMPFILE('$CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES','$CCCOMSTR')}").split(' ')
+        command += ["-W", "-MM", "-E", hal_config_path]
 
-# STM32 version
-# do not call this function, use other possibility
-# env.BuildSources(
-#     os.path.join("$BUILD_DIR", "FrameworkHALDriver"),
-#     os.path.join(FRAMEWORK_DIR, "Drivers",  MCU_FAMILY.upper() + "xx_HAL_Driver"),
-#     src_filter=["-<*> -<Src/*_template.c> -<Src/Legacy>"] + [" +<%s>" % f for f in get_core_files()]
-# )
+        result = exec_command(command, cwd=TOOLCHAIN_DIR + "/bin", env=env['ENV'])
+        if result['returncode'] != 0:
+            sys.stderr.write("Error: Could not parse library files for the target.\n")
+            sys.stderr.write(result['err'])
+            env.Exit(1)
+
+        src_include_only = []
+        includes = result['out']
+        for inc in includes.split(" "):
+            if "_" not in inc or ".h" not in inc or "conf" in inc:
+                continue
+            inc = inc.strip()
+            inc = inc.replace(".h", ".c")
+            inc = inc.replace(
+                os.path.join(hal_driver_dir, "Inc"),
+                os.path.join(hal_driver_dir, "Src"),
+            )
+            src_include_only.append(inc)
+
+        print(os.path.join(hal_driver_dir, "Inc"))
+        pprint(src_include_only)
 
 
 def middleware(env, node):
-    # TODO check if node path like HAL system config path
-    # TODO if yes - check if file in allowed list, else return null
-    print(node)
+    resolve_src_include_only()
+    if not src_include_only:
+        return node
+
+    if not str(node).startswith(hal_driver_dir):
+        return node
+
+    if not str(node) in src_include_only:
+        return None
+
     return node
 
 
