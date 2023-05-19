@@ -66,8 +66,12 @@ void HAL_MspInit(void)
 
   /* USER CODE END MspInit 0 */
 
-  __HAL_RCC_AFIO_CLK_ENABLE();
-  __HAL_RCC_PWR_CLK_ENABLE();
+//  __HAL_RCC_AFIO_CLK_ENABLE();
+//  __HAL_RCC_PWR_CLK_ENABLE();
+
+  // direct alternative for STM32F1xx:
+  // TODO maybe cmsis produce more less code
+  RCC->APB2ENR |= RCC_APB2ENR_AFIOEN|RCC_APB1ENR_PWREN;
 
   /* System interrupt init*/
 
