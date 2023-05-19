@@ -39,7 +39,7 @@
 /* USER CODE END PV */
 
 PCD_HandleTypeDef hpcd_USB_FS;
-void Error_Handler(void);
+//void Error_Handler(void);
 
 /* USER CODE BEGIN 0 */
 
@@ -74,7 +74,8 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
 
   /* USER CODE END USB_MspInit 0 */
     /* Peripheral clock enable */
-    __HAL_RCC_USB_CLK_ENABLE();
+//    __HAL_RCC_USB_CLK_ENABLE();
+    RCC->APB1ENR |= RCC_APB1ENR_USBEN;
 
     /* Peripheral interrupt init */
     HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0, 0);
