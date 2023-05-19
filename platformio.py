@@ -36,20 +36,20 @@ def get_core_files():
     #     MCU_FAMILY + "xx_hal_conf.h"
     # )
     project_conf = os.path.join(env["PROJECT_DIR"], "env", "bootloader", "src", MCU_FAMILY + "xx_hal_conf.h")
-    # print(TOOLCHAIN_DIR)
-    # print(env.Dump())
+
+    # TODO check which HAL config to check
+    # Check if project HAL config exists
     if not os.path.isfile(project_conf):
         sys.stderr.write("Error: Couldn't find " + project_conf + " file!\n")
         return []
 
-    command = TOOLCHAIN_DIR + "/bin/" + env.subst("${TEMPFILE('$CC $CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES','$CCCOMSTR')}") + " -W -MM -E " + project_conf
+    # Create command for resolve required headers
+    command = [TOOLCHAIN_DIR + "/bin/" + env.subst("$CC")]
+    command += env.subst("${TEMPFILE('$CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES','$CCCOMSTR')}").split(' ')
+    command += ["-W", "-MM", "-E", project_conf]
 
-    command2 = [TOOLCHAIN_DIR + "/bin/" + env.subst("$CC")]
-    command2 += env.subst("${TEMPFILE('$CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES','$CCCOMSTR')}").split(' ')
-    command2 += ["-W", "-MM", "-E", project_conf]
-    # pprint(command2)
     result = exec_command(
-        command2,
+        command,
         cwd=TOOLCHAIN_DIR + "/bin",
         env=env['ENV']
     )
