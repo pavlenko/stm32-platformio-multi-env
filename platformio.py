@@ -43,37 +43,44 @@ def get_core_files():
         return []
 
     command = TOOLCHAIN_DIR + "/bin/" + env.subst("${TEMPFILE('$CC $CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES','$CCCOMSTR')}") + " -W -MM -E " + project_conf
-    print(os.path.isfile(TOOLCHAIN_DIR + "/bin/" + env.subst("$CC")))
+
+    command2 = [TOOLCHAIN_DIR + "/bin/" + env.subst("$CC")]
+    command2 += env.subst("${TEMPFILE('$CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES','$CCCOMSTR')}").split(' ')
+    command2 += ["-W", "-MM", "-E", project_conf]
+    # pprint(command2)
     result = exec_command(
-        command,
+        command2,
         cwd=TOOLCHAIN_DIR + "/bin",
         env=env['ENV']
     )
 
-    print(result)
-    env.Exit(0)
-#
-#     if result['returncode'] != 0:
-#         sys.stderr.write("Error: Could not parse library files for the target.\n")
-#         sys.stderr.write(result['err'])
-#         env.Exit(1)
-#
-#     src_files = []
-#     includes = result['out']
-#     for inc in includes.split(" "):
-#         if "_" not in inc or ".h" not in inc or "conf" in inc:
-#             continue
-#         src_files.append(basename(inc).replace(".h", ".c").strip())
-#
-#     return src_files
+    if result['returncode'] != 0:
+        sys.stderr.write("Error: Could not parse library files for the target.\n")
+        sys.stderr.write(result['err'])
+        env.Exit(1)
+
+    src_files = []
+    includes = result['out']
+    for inc in includes.split(" "):
+        if "_" not in inc or ".h" not in inc or "conf" in inc:
+            continue
+        src_files.append(os.path.basename(inc).replace(".h", ".c").strip())
+        # src_files.append(inc.replace(".h", ".c").strip())
+
+    pprint(src_files)
+    # env.Exit(0)
+    return src_files
 
 
 get_core_files()
 
+pprint(vars(env))
+env.Exit(0)
 
 # STM32 version
-# env.BuildSources(
-#     os.path.join("$BUILD_DIR", "FrameworkHALDriver"),
-#     os.path.join(FRAMEWORK_DIR, "Drivers",  MCU_FAMILY.upper() + "xx_HAL_Driver"),
-#     src_filter=["-<*> -<Src/*_template.c> -<Src/Legacy>"] + [" +<%s>" % f for f in get_core_files()]
-# )
+# do not call this function, use other possibility
+env.BuildSources(
+    os.path.join("$BUILD_DIR", "FrameworkHALDriver"),
+    os.path.join(FRAMEWORK_DIR, "Drivers",  MCU_FAMILY.upper() + "xx_HAL_Driver"),
+    src_filter=["-<*> -<Src/*_template.c> -<Src/Legacy>"] + [" +<%s>" % f for f in get_core_files()]
+)
