@@ -159,9 +159,10 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
+//  __HAL_RCC_GPIOD_CLK_ENABLE();
+//  __HAL_RCC_GPIOA_CLK_ENABLE();
   // TODO try create as minimal as possible bit manipulation call count
+  RCC->APB2ENR |= RCC_APB2ENR_IOPAEN|RCC_APB2ENR_IOPDEN;
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
