@@ -72,15 +72,28 @@ def get_core_files():
     return src_files
 
 
-get_core_files()
+# TODO init all required vars
+#      add src_filter array and fill it only when requested
+# get_core_files()
 
-pprint(vars(env))
-env.Exit(0)
+# pprint(vars(env))
+# env.Exit(0)
+
 
 # STM32 version
 # do not call this function, use other possibility
-env.BuildSources(
-    os.path.join("$BUILD_DIR", "FrameworkHALDriver"),
-    os.path.join(FRAMEWORK_DIR, "Drivers",  MCU_FAMILY.upper() + "xx_HAL_Driver"),
-    src_filter=["-<*> -<Src/*_template.c> -<Src/Legacy>"] + [" +<%s>" % f for f in get_core_files()]
-)
+# env.BuildSources(
+#     os.path.join("$BUILD_DIR", "FrameworkHALDriver"),
+#     os.path.join(FRAMEWORK_DIR, "Drivers",  MCU_FAMILY.upper() + "xx_HAL_Driver"),
+#     src_filter=["-<*> -<Src/*_template.c> -<Src/Legacy>"] + [" +<%s>" % f for f in get_core_files()]
+# )
+
+
+def middleware(env, node):
+    # TODO check if node path like HAL system config path
+    # TODO if yes - check if file in allowed list, else return null
+    print(node)
+    return node
+
+
+env.AddBuildMiddleware(middleware)
