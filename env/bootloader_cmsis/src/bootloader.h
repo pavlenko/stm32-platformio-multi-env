@@ -47,7 +47,7 @@ typedef struct {
     void (*init)(void);
     void (*stop)(void);
     uint8_t (*Detection)(void);//TODO
-    uint8_t (*get_cmd_code)(void);
+    uint8_t (*get_opcode)(void);
     void (*send_byte)(uint8_t Byte);
 } bootloader_operations_t;//TODO rename
 
