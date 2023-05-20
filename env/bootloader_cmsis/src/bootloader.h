@@ -32,28 +32,28 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 /* Private includes ----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
-//TODO sort & rename props
+//TODO rename props (un)protect?
 typedef struct {
     void (*get_command)(void);
     void (*get_version)(void);
     void (*get_id)(void);
-    void (*read_memory)(void);
-    void (*write_memory)(void);
-    void (*go)(void);
-    void (*readout_protect)(void);
-    void (*readout_unprotect)(void);
-    void (*erase_memory)(void);
-    void (*write_Protect)(void);
-    void (*write_Unprotect)(void);
-    void (*ns_WriteMemory)(void);
-    void (*ns_EraseMemory)(void);
-    void (*ns_WriteProtect)(void);
-    void (*ns_WriteUnprotect)(void);
-    void (*ns_ReadoutProtect)(void);
-    void (*ns_ReadoutUnprotect)(void);
     void (*speed)(void);
+    void (*read_memory)(void);
+    void (*go)(void);
+    void (*write_memory)(void);
+    void (*write_memory_ns)(void);
+    void (*erase_memory)(void);
+    void (*erase_memory_ns)(void);
     void (*special)(void);
     void (*special_extended)(void);
+    void (*write_protect)(void);
+    void (*write_protect_ns)(void);
+    void (*write_unprotect)(void);
+    void (*write_unprotect_ns)(void);
+    void (*readout_protect)(void);
+    void (*readout_protect_ns)(void);
+    void (*readout_unprotect)(void);
+    void (*readout_unprotect_ns)(void);
 } bootloader_commands_t;
 
 /* Exported constants --------------------------------------------------------*/
