@@ -12,6 +12,7 @@
 
 void bootloader_dispatch(bootloader_interface_t *interface)
 {
+    //TODO maybe interface as global var
     uint8_t opcode;
     switch (opcode) {
         case CMD_GET_COMMAND:
@@ -35,6 +36,12 @@ void bootloader_dispatch(bootloader_interface_t *interface)
                 interface->api->send_byte(NACK_BYTE);
             }
             break;
-            //TODO create handler to command map...
+            //TODO create handler to command map???
+
+        default:
+            if (interface->api->send_byte != NULL) {
+                interface->api->send_byte(NACK_BYTE);
+            }
+            break;
     }
 }
