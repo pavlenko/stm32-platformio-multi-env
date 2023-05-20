@@ -32,6 +32,30 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 /* Private includes ----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
+//TODO sort & rename props
+typedef struct {
+    void (*get_command)(void);
+    void (*get_version)(void);
+    void (*get_id)(void);
+    void (*read_memory)(void);
+    void (*write_memory)(void);
+    void (*go)(void);
+    void (*readout_protect)(void);
+    void (*readout_unprotect)(void);
+    void (*erase_memory)(void);
+    void (*write_Protect)(void);
+    void (*write_Unprotect)(void);
+    void (*ns_WriteMemory)(void);
+    void (*ns_EraseMemory)(void);
+    void (*ns_WriteProtect)(void);
+    void (*ns_WriteUnprotect)(void);
+    void (*ns_ReadoutProtect)(void);
+    void (*ns_ReadoutUnprotect)(void);
+    void (*speed)(void);
+    void (*special)(void);
+    void (*special_extended)(void);
+} bootloader_commands_t;
+
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions prototypes ---------------------------------------------*/
