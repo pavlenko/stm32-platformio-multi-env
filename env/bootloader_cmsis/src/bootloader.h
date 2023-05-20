@@ -6,6 +6,15 @@ extern "C" {
 #endif
 
 // Based on STM open-bootloader project
+#define ERROR_COMMAND                     0xECU             /* Error command */
+#define ACK_BYTE                          0x79U             /* Acknowledge Byte ID */
+#define NACK_BYTE                         0x1FU             /* No Acknowledge Byte ID */
+#define BUSY_BYTE                         0x76U             /* Busy Byte */
+#define SYNC_BYTE                         0xA5U             /* synchronization byte */
+#define SPECIAL_CMD_SIZE_BUFFER1          128U              /* Special command received data buffer size */
+#define SPECIAL_CMD_SIZE_BUFFER2          1024U             /* Special command write data buffer size */
+
+
 #define CMD_GET_COMMAND             0x00U
 #define CMD_GET_VERSION             0x01U
 #define CMD_GET_ID                  0x02U
@@ -30,9 +39,18 @@ extern "C" {
 #define CMD_GET_CHECKSUM            0xA1U
 
 /* Includes ------------------------------------------------------------------*/
+#include "stdint.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
-//TODO rename props (un)protect?
+typedef struct {
+    void (*init)(void);
+    void (*stop)(void);
+    uint8_t (*Detection)(void);//TODO
+    uint8_t (*get_cmd_code)(void);
+    void (*send_byte)(uint8_t Byte);
+} bootloader_operations_t;//TODO rename
+
 typedef struct {
     void (*get_command)(void);
     void (*get_version)(void);
@@ -55,6 +73,11 @@ typedef struct {
     void (*readout_unprotect)(void);
     void (*readout_unprotect_ns)(void);
 } bootloader_commands_t;
+
+typedef struct {
+    bootloader_operations_t *api;
+    bootloader_commands_t *cmd;
+} bootloader_interface_t;
 
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
