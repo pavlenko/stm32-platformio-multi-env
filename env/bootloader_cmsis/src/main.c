@@ -7,6 +7,7 @@
 /* Private includes ----------------------------------------------------------*/
 #include "usb.h"
 #include "usb_dfu.h"
+#include "descriptors.h"
 
 /* Private typedef -----------------------------------------------------------*/
 typedef struct dfu_device_s {
@@ -19,18 +20,17 @@ typedef struct dfu_device_s {
 } dfu_device_t;
 
 /* Private define ------------------------------------------------------------*/
-#define DFU_EP0_SIZE    8
-#define DFU_BLOCK_SIZE  0x80
-#define DFU_BUFFER_SIZE ((DFU_BLOCK_SIZE + 3 + 8) >> 2)
+#define DFU_EP0_SIZE       8
+#define DFU_POLL_TIMEOUT    20
+#define DFU_DETACH_TIMEOUT 200
+#define DFU_BLOCK_SIZE     0x80
+#define DFU_BUFFER_SIZE    ((DFU_BLOCK_SIZE + 3 + 8) >> 2)
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static uint32_t dfu_buffer[DFU_BUFFER_SIZE];
 static usbd_device dfu;
 static dfu_device_t dfu_device;
-
-//TODO dfu_device_desc
-//TODO dfu_config_desc
 
 /* Private function prototypes -----------------------------------------------*/
 static usbd_respond dfu_config(usbd_device *dev, uint8_t config);
@@ -44,8 +44,6 @@ static usbd_respond dfu_clrstatus();
 static usbd_respond dfu_abort();
 static usbd_respond dfu_set_idle(void);
 static usbd_respond dfu_err_badreq(void);
-
-usbd_respond dfu_get_descriptor(usbd_ctlreq *req, void **address, uint16_t *len);
 
 /* Private user code ---------------------------------------------------------*/
 
@@ -255,40 +253,4 @@ static usbd_respond dfu_err_badreq(void) {
     dfu_device.bState  = USB_DFU_STATE_DFU_ERROR;
     dfu_device.bStatus = USB_DFU_STATUS_ERR_STALLEDPKT;
     return usbd_fail;
-}
-
-//TODO
-usbd_respond dfu_get_descriptor(usbd_ctlreq *req, void **address, uint16_t *len) {
-    const uint8_t dtype = req->wValue >> 8;
-    const uint8_t dindx = req->wValue & 0xFF;
-    const void *desc;
-    uint16_t dlen = 0;
-    switch (dtype) {
-        case USB_DTYPE_DEVICE:
-            desc = &dfu_device_desc;
-            break;
-        case USB_DTYPE_CONFIGURATION:
-            desc = &dfu_config_desc;
-            if (*len >= sizeof(dfu_config_desc)) {
-                dlen = sizeof(dfu_config_desc);
-            }
-            break;
-        case USB_DTYPE_STRING:
-            if (dindx < _countof(dtable)) {
-                desc = dtable[dindx];
-#if (DFU_WCID != _DISABLE)
-                } else if (dindx == 0xEE) {
-            desc = &dfu_msft_sdesc;
-#endif
-            } else {
-                return usbd_fail;
-            }
-            break;
-        default:
-            return usbd_fail;
-    }
-    if (dlen == 0) dlen = ((struct usb_string_descriptor*)desc)->bLength;
-    *len = dlen;
-    *address = (void*)desc;
-    return usbd_ack;
 }
