@@ -14,13 +14,9 @@
  */
 
 #include <stdint.h>
-#include <stdlib.h>
-#include <stdbool.h>
-//#include "stm32.h"
 #include "config.h"
 #include "usb.h"
 #include "usb_dfu.h"
-#include "usb_msft.h"
 
 /* Checking for the EEPROM */
 #if (defined(DATA_EEPROM_BASE) || defined(FLASH_EEPROM_BASE)) && (DFU_INTF_EEPROM != _DISABLE)

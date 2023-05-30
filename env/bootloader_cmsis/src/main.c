@@ -238,7 +238,7 @@ static usbd_respond dfu_set_idle(void) {
     switch (dfu_device.interface){
         default:
             dfu_device.dptr = (void*)_APP_START;
-            dfu_device.remained = _APP_LENGTH;
+            dfu_device.remained = FLASH_SIZE - DFU_SIZE;
             dfu_device.flash = program_flash;
             break;
     }

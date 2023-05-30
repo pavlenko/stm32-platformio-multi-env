@@ -58,4 +58,10 @@
 
 #define DFU_BUFFER_SIZE    ((DFU_BLOCK_SIZE + 3 + 8) >> 2)
 
+#define DFU_MAX_SIZE = 4096
+
+#ifndef FLASH_SIZE
+#error "FLASH_SIZE undefined, you may pass it as -DFLASH_SIZE=N compiler flag, where N - size in bytes"
+#endif
+
 #endif //STM32_PLATFORMIO_MULTI_ENV_CONFIG_H
