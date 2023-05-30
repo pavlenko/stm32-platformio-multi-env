@@ -14,13 +14,10 @@
  */
 
 #include <stdint.h>
-#include <stdlib.h>
-#include <stdbool.h>
-//#include "stm32.h"
 #include "config.h"
 #include "usb.h"
 #include "usb_dfu.h"
-#include "usb_msft.h"
+#include "usb_std.h"
 
 /* Checking for the EEPROM */
 #if (defined(DATA_EEPROM_BASE) || defined(FLASH_EEPROM_BASE)) && (DFU_INTF_EEPROM != _DISABLE)
@@ -29,7 +26,7 @@
 
 #define _NEXT_IDX   (__COUNTER__ + 3)
 
-/* setting up descriptor indexex */
+/* setting up descriptor indexes */
 #if (DFU_DSC_CONFIG == _ENABLE) && defined(DFU_STR_CONFIG)
     #define _CONF_IDX   _NEXT_IDX
 #else
@@ -120,7 +117,7 @@ static const struct config_desc dfu_config_desc = {
         .bmAttributes           = USB_DFU_ATTR_CAN_DNLOAD | USB_DFU_ATTR_MANIF_TOL,
 #endif
         .wDetachTimeout         = DFU_DETACH_TIMEOUT,
-        .wTransferSize          = DFU_BLOCKSZ,
+        .wTransferSize          = DFU_BLOCK_SIZE,
         .bcdDFUVersion          = VERSION_BCD(1,1,0),
     },
 };
@@ -153,32 +150,6 @@ static const struct usb_string_descriptor * const dtable[] = {
 #endif
 };
 
-#if (DFU_WCID != _DISABLE)
-static const struct usb_string_descriptor dfu_msft_sdesc  = {
-    .bLength = 18,
-    .bDescriptorType = USB_DTYPE_STRING,
-    .wString = u"MSFT100\x00\x00"
-};
-
-static const struct usb_msft_compat_id_desc dfu_msft_compat_id_desc = {
-    .dwLength = (USB_MSFT_COMPAT_ID_HEADER_SIZE +
-                 1*USB_MSFT_COMPAT_ID_FUNCTION_SECTION_SIZE),
-    .bcdVersion = 0x0100,
-    .wIndex = 0x0004,
-    .bNumSections = 1,
-    .reserved = { 0, 0, 0, 0, 0, 0, 0 },
-    .functions = {
-        {
-            .bInterfaceNumber = 0,
-            .reserved0 = { 1 },
-            .compatibleId = "WINUSB",
-            .subCompatibleId = "",
-            .reserved1 = { 0, 0, 0, 0, 0, 0}
-        },
-    }
-};
-#endif
-
 usbd_respond dfu_get_descriptor(usbd_ctlreq *req, void **address, uint16_t *len) {
     const uint8_t dtype = req->wValue >> 8;
     const uint8_t dindx = req->wValue & 0xFF;
@@ -197,10 +168,6 @@ usbd_respond dfu_get_descriptor(usbd_ctlreq *req, void **address, uint16_t *len)
     case USB_DTYPE_STRING:
         if (dindx < _countof(dtable)) {
             desc = dtable[dindx];
-#if (DFU_WCID != _DISABLE)
-        } else if (dindx == 0xEE) {
-            desc = &dfu_msft_sdesc;
-#endif
         } else {
             return usbd_fail;
         }
@@ -213,16 +180,3 @@ usbd_respond dfu_get_descriptor(usbd_ctlreq *req, void **address, uint16_t *len)
     *address = (void*)desc;
     return usbd_ack;
 }
-
-#if (DFU_WCID != _DISABLE)
-usbd_respond dfu_get_vendor_descriptor(usbd_ctlreq *req, void**address, uint16_t *len) {
-    if ((req->bmRequestType & USB_REQ_RECIPIENT) == USB_REQ_DEVICE) {
-        if (req->wIndex == USB_MSFT_REQ_GET_COMPAT_ID_FEATURE_DESCRIPTOR) {
-            *len = dfu_msft_compat_id_desc.dwLength;
-            *address = (struct usb_msft_compat_id_desc*)&dfu_msft_compat_id_desc;
-            return usbd_ack;
-        }
-    }
-    return usbd_fail;
-}
-#endif

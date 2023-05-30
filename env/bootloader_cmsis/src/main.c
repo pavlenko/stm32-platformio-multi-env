@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "config.h"
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -20,11 +21,6 @@ typedef struct dfu_device_s {
 } dfu_device_t;
 
 /* Private define ------------------------------------------------------------*/
-#define DFU_EP0_SIZE       8
-#define DFU_POLL_TIMEOUT    20
-#define DFU_DETACH_TIMEOUT 200
-#define DFU_BLOCK_SIZE     0x80
-#define DFU_BUFFER_SIZE    ((DFU_BLOCK_SIZE + 3 + 8) >> 2)
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
