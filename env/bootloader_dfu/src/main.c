@@ -11,7 +11,7 @@
 #include <libopencm3/usb/dfu.h>
 
 #include "config.h"
-
+//TODO optimize to fit 4kb
 #define APP_ADDRESS (FLASH_BASE + DFU_SIZE)
 
 /* Commands sent with wBlockNum == 0 as per ST implementation. */
@@ -19,7 +19,7 @@
 #define CMD_ERASE	0x41
 
 /* We need a special large control buffer for this device: */
-uint8_t usbd_control_buffer[1024];
+uint8_t usbd_control_buffer[DFU_TRANSFER_SIZE];
 
 static enum dfu_state usbdfu_state = STATE_DFU_IDLE;
 
@@ -38,8 +38,8 @@ const struct usb_device_descriptor dev = {
         .bDeviceSubClass = 0,
         .bDeviceProtocol = 0,
         .bMaxPacketSize0 = 64,
-        .idVendor = 0x0483,
-        .idProduct = 0xDF11,
+        .idVendor = USB_VID,
+        .idProduct = USB_PID,
         .bcdDevice = 0x0200,
         .iManufacturer = 1,
         .iProduct = 2,
@@ -50,9 +50,9 @@ const struct usb_device_descriptor dev = {
 const struct usb_dfu_descriptor dfu_function = {
         .bLength = sizeof(struct usb_dfu_descriptor),
         .bDescriptorType = DFU_FUNCTIONAL,
-        .bmAttributes = USB_DFU_CAN_DOWNLOAD | USB_DFU_WILL_DETACH,
+        .bmAttributes = USB_DFU_CAN_UPLOAD | USB_DFU_CAN_DOWNLOAD | USB_DFU_WILL_DETACH,
         .wDetachTimeout = 255,
-        .wTransferSize = 1024,
+        .wTransferSize = DFU_TRANSFER_SIZE,
         .bcdDFUVersion = 0x011A,
 };
 
@@ -93,8 +93,8 @@ const struct usb_config_descriptor config = {
 };
 
 static const char *usb_strings[] = {
-        "Black Sphere Technologies",
-        "DFU Demo",
+        USB_VENDOR_STRING,
+        USB_PRODUCT_STRING,
         "DEMO",
         /* This string is used by ST Microelectronics' DfuSe utility. */
         "@Internal Flash   /0x08000000/8*001Ka,56*001Kg",

@@ -7,6 +7,10 @@
 #define DFU_KEY 0x544F4F42u
 #endif
 
+#ifndef DFU_TRANSFER_SIZE
+#define DFU_TRANSFER_SIZE 1024u
+#endif
+
 #ifndef DFU_VERSION
 #define DFU_VERSION "v1.1"
 #endif
