@@ -1,10 +1,11 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include "stm32f103xb.h"
 
 // Basic defs
 #define MMIO32(addr)       (*(volatile uint32_t *)(addr))
-#define PERIPH_BASE        (0x40000000U)
+//#define PERIPH_BASE        (0x40000000U)
 #define PERIPH_BASE_APB1   (PERIPH_BASE + 0x00000)
 #define USB_DEV_FS_BASE    (PERIPH_BASE_APB1 + 0x5c00)
 #define USB_PMA_BASE       (PERIPH_BASE_APB1 + 0x6000)
@@ -261,7 +262,7 @@ enum usb_language_id {
 /* Get masked out bit value. */
 #define GET_REG_BIT(REG, BIT)	(GET_REG(REG) & (BIT))
 
-#define USB_DADDR_EF		(1 << 7)
+//#define USB_DADDR_EF		(1 << 7)
 #define USB_DADDR_ADDR		0x007F
 
 
@@ -286,34 +287,34 @@ enum usb_language_id {
 /* --- USB control register masks / bits ----------------------------------- */
 
 /* Interrupt mask bits, set to 1 to enable interrupt generation */
-#define USB_CNTR_CTRM		0x8000
-#define USB_CNTR_PMAOVRM	0x4000
-#define USB_CNTR_ERRM		0x2000
-#define USB_CNTR_WKUPM		0x1000
-#define USB_CNTR_SUSPM		0x0800
-#define USB_CNTR_RESETM		0x0400
-#define USB_CNTR_SOFM		0x0200
-#define USB_CNTR_ESOFM		0x0100
+//#define USB_CNTR_CTRM		0x8000
+//#define USB_CNTR_PMAOVRM	0x4000
+//#define USB_CNTR_ERRM		0x2000
+//#define USB_CNTR_WKUPM		0x1000
+//#define USB_CNTR_SUSPM		0x0800
+//#define USB_CNTR_RESETM		0x0400
+//#define USB_CNTR_SOFM		0x0200
+//#define USB_CNTR_ESOFM		0x0100
 
 /* Request/Force bits */
-#define USB_CNTR_RESUME		0x0010 /* Resume request */
-#define USB_CNTR_FSUSP		0x0008 /* Force suspend */
-#define USB_CNTR_LP_MODE	0x0004 /* Low-power mode */
+//#define USB_CNTR_RESUME		0x0010 /* Resume request */
+//#define USB_CNTR_FSUSP		0x0008 /* Force suspend */
+//#define USB_CNTR_LP_MODE	0x0004 /* Low-power mode */
 #define USB_CNTR_PWDN		0x0002 /* Power down */
-#define USB_CNTR_FRES		0x0001 /* Force reset */
+//#define USB_CNTR_FRES		0x0001 /* Force reset */
 
 /* --- USB interrupt status register masks / bits -------------------------- */
 
-#define USB_ISTR_CTR		0x8000 /* Correct Transfer */
-#define USB_ISTR_PMAOVR		0x4000 /* Packet Memory Area Over / Underrun */
-#define USB_ISTR_ERR		0x2000 /* Error */
-#define USB_ISTR_WKUP		0x1000 /* Wake up */
-#define USB_ISTR_SUSP		0x0800 /* Suspend mode request */
-#define USB_ISTR_RESET		0x0400 /* USB RESET request */
-#define USB_ISTR_SOF		0x0200 /* Start Of Frame */
-#define USB_ISTR_ESOF		0x0100 /* Expected Start Of Frame */
-#define USB_ISTR_DIR		0x0010 /* Direction of transaction */
-#define USB_ISTR_EP_ID		0x000F /* Endpoint Identifier */
+//#define USB_ISTR_CTR		0x8000 /* Correct Transfer */
+//#define USB_ISTR_PMAOVR		0x4000 /* Packet Memory Area Over / Underrun */
+//#define USB_ISTR_ERR		0x2000 /* Error */
+//#define USB_ISTR_WKUP		0x1000 /* Wake up */
+//#define USB_ISTR_SUSP		0x0800 /* Suspend mode request */
+//#define USB_ISTR_RESET		0x0400 /* USB RESET request */
+//#define USB_ISTR_SOF		0x0200 /* Start Of Frame */
+//#define USB_ISTR_ESOF		0x0100 /* Expected Start Of Frame */
+//#define USB_ISTR_DIR		0x0010 /* Direction of transaction */
+//#define USB_ISTR_EP_ID		0x000F /* Endpoint Identifier */
 
 /* --- USB interrupt status register manipulators -------------------------- */
 
@@ -335,12 +336,12 @@ enum usb_language_id {
 #define USB_EP_RX_DTOG		0x4000 /* Data toggle RX */
 #define USB_EP_RX_STAT		0x3000 /* Endpoint status for RX */
 
-#define USB_EP_SETUP		0x0800 /* Setup transaction completed */
+//#define USB_EP_SETUP		0x0800 /* Setup transaction completed */
 #define USB_EP_TYPE		0x0600 /* Endpoint type */
-#define USB_EP_KIND		0x0100 /* Endpoint kind.
-				* When set and type=bulk    -> double buffer
-				* When set and type=control -> status out
-				*/
+//#define USB_EP_KIND		0x0100 /* Endpoint kind.
+//				* When set and type=bulk    -> double buffer
+//				* When set and type=control -> status out
+//				*/
 
 #define USB_EP_TX_CTR		0x0080 /* Correct transfer TX */
 #define USB_EP_TX_DTOG		0x0040 /* Data toggle TX */

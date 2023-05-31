@@ -266,11 +266,11 @@ usbdfu_control_request(struct usb_setup_data *req,
 	return USBD_REQ_NEXT_CALLBACK;
 }
 
-#define GPIOA 0
-#define GPIOB 1
-#define GPIOC 2
-#define GPIOD 3
-#define GPIOE 4
+//TODO #define GPIOA 0
+//TODO #define GPIOB 1
+//TODO #define GPIOC 2
+//TODO #define GPIOD 3
+//TODO #define GPIOE 4
 #define GPIOF 5
 
 #define GPIO_CRL(x)  *((volatile uint32_t*)(x*0x400 +  0 + 0x40010800U))
@@ -312,7 +312,7 @@ int force_dfu_gpio() {
 #define force_dfu_gpio()  (0)
 #endif
 
-#define FLASH_ACR_LATENCY         7
+//TODO #define FLASH_ACR_LATENCY         7
 #define FLASH_ACR_LATENCY_2WS  0x02
 #define FLASH_ACR          (*(volatile uint32_t*)0x40022000U)
 #define FLASH_OBR          (*(volatile uint32_t*)0x4002201CU)
@@ -330,23 +330,23 @@ int force_dfu_gpio() {
 #define RCC_CFGR_PLLXTPRE_HSE_CLK       0x0
 #define RCC_CFGR_SW_SYSCLKSEL_PLLCLK    0x2
 #define RCC_CFGR_SW_SHIFT                 0
-#define RCC_CFGR_SW (3 << RCC_CFGR_SW_SHIFT)
+//TODO #define RCC_CFGR_SW (3 << RCC_CFGR_SW_SHIFT)
 
-#define RCC_CR_HSEON    (1 << 16)
-#define RCC_CR_HSERDY   (1 << 17)
-#define RCC_CR_PLLON    (1 << 24)
-#define RCC_CR_PLLRDY   (1 << 25)
+//TODO #define RCC_CR_HSEON    (1 << 16)
+//TODO #define RCC_CR_HSERDY   (1 << 17)
+//TODO #define RCC_CR_PLLON    (1 << 24)
+//TODO #define RCC_CR_PLLRDY   (1 << 25)
 #define RCC_CR       (*(volatile uint32_t*)0x40021000U)
 #define RCC_CFGR     (*(volatile uint32_t*)0x40021004U)
 
 #define RCC_CSR      (*(volatile uint32_t*)0x40021024U)
-#define RCC_CSR_LPWRRSTF    (1 << 31)
-#define RCC_CSR_WWDGRSTF    (1 << 30)
-#define RCC_CSR_IWDGRSTF    (1 << 29)
-#define RCC_CSR_SFTRSTF     (1 << 28)
-#define RCC_CSR_PORRSTF     (1 << 27)
-#define RCC_CSR_PINRSTF     (1 << 26)
-#define RCC_CSR_RMVF        (1 << 24)
+//TODO #define RCC_CSR_LPWRRSTF    (1 << 31)
+//TODO #define RCC_CSR_WWDGRSTF    (1 << 30)
+//TODO #define RCC_CSR_IWDGRSTF    (1 << 29)
+//TODO #define RCC_CSR_SFTRSTF     (1 << 28)
+//TODO #define RCC_CSR_PORRSTF     (1 << 27)
+//TODO #define RCC_CSR_PINRSTF     (1 << 26)
+//TODO #define RCC_CSR_RMVF        (1 << 24)
 
 #ifdef ENABLE_PINRST_DFU_BOOT
 static inline int reset_due_to_pin() {
@@ -501,9 +501,9 @@ int main(void) {
 	 * Vile hack to reenumerate, physically _drag_ d+ low.
 	 * (need at least 2.5us to trigger USB disconnect)
 	 */
-	rcc_gpio_enable(GPIOA);
-	gpio_set_output(GPIOA, 12);
-	gpio_clear(GPIOA, 12);
+	rcc_gpio_enable(GPIOA_BASE);//TODO check
+	gpio_set_output(GPIOA_BASE, 12);//TODO check
+	gpio_clear(GPIOA_BASE, 12);//TODO check
 	for (unsigned int i = 0; i < 100000; i++)
 		__asm__("nop");
 

@@ -1,6 +1,8 @@
 #ifndef __FLASH_CONFIG_H
 #define __FLASH_CONFIG_H
 
+#include "stm32f103xb.h"
+
 #ifndef VERSION
 #define VERSION "v1.1.0"
 #endif
@@ -29,7 +31,7 @@
 
 // For GPIO DFU booting: -DENABLE_GPIO_DFU_BOOT -DGPIO_DFU_BOOT_PORT=GPIOB -DGPIO_DFU_BOOT_PIN=2
 #define ENABLE_GPIO_DFU_BOOT
-#define GPIO_DFU_BOOT_PORT GPIOB
+#define GPIO_DFU_BOOT_PORT GPIOB_BASE //TODO port
 #define GPIO_DFU_BOOT_PIN 2
 
 // To protect bootloader from accidental writes: -DENABLE_WRITEPROT
