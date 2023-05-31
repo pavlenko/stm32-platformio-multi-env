@@ -4,54 +4,47 @@
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/flash.h>
+#include <libopencm3/cm3/scb.h>
+#include <libopencm3/usb/usbd.h>
+#include <libopencm3/usb/dfu.h>
 
 #include "config.h"
 
 #define APP_ADDRESS (FLASH_BASE + DFU_SIZE)
 
-// Enables DFU mode when a reset from the nRST pin occurs.
-static inline uint32_t reset_due_to_pin(void) {
-    return (RCC_CSR & RCC_CSR_PINRSTF)
-           && !(RCC_CSR & (RCC_CSR_LPWRRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_IWDGRSTF | RCC_CSR_SFTRSTF | RCC_CSR_PORRSTF));
-}
-
-// If watchdog trigger reset.
-static inline uint32_t reset_due_to_watchdog(void) {
-    return (RCC_CSR & RCC_CSR_IWDGRSTF);
-}
-
 int main(void) {
-    //TODO maybe check RTC backup registers instead of ram (do not need ram remap)
-    //TODO or check if: last 8 RAM bytes = DFU_KEY - got to dfu
-    //TODO or check if: reset_due_to_pin
-    //TODO or check if: reset_due_to_watchdog
-    //TODO or check if: invalid checksum
+    usbd_device *dev;
 
-#ifndef DFU_CHECK_GPIO_DISABLED
-    // check force_dfu_gpio
+    // Setup GPIO
     rcc_periph_clock_enable(RCC_GPIOA);
     gpio_set_mode(DFU_CHECK_GPIO_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, DFU_CHECK_GPIO_PIN);
     gpio_clear(DFU_CHECK_GPIO_PORT, DFU_CHECK_GPIO_PIN);
     for (uint16_t i = 0; i < 512; i++) {
         __asm__("nop");
     }
-    bool go_dfu = gpio_get(DFU_CHECK_GPIO_PORT, DFU_CHECK_GPIO_PIN);
-    gpio_set_mode(DFU_CHECK_GPIO_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_FLOAT, DFU_CHECK_GPIO_PIN);
-#endif
 
-    if (!go_dfu) {
-        // Set vector table base address.
-        volatile uint32_t *_csb_vtor = (uint32_t*)0xE000ED08U;
-        *_csb_vtor = APP_ADDRESS & 0xFFFF;
-
-        // Initialise master stack pointer.
-        __asm__ volatile("msr msp, %0"::"g" (*(volatile uint32_t *)APP_ADDRESS));
-
-        // Jump to application.
-        (*(void (**)(void))(APP_ADDRESS + 4))();
+    // Check GPIO
+    if (!gpio_get(DFU_CHECK_GPIO_PORT, DFU_CHECK_GPIO_PIN)) {
+        // Boot the application if it's valid.
+        if ((*(volatile uint32_t *)APP_ADDRESS & 0x2FFE0000) == 0x20000000) {
+            // Set vector table base address.
+            SCB_VTOR = APP_ADDRESS & 0xFFFF;
+            // Initialise master stack pointer.
+            asm volatile("msr msp, %0"::"g" (*(volatile uint32_t *)APP_ADDRESS));
+            // Jump to application.
+            (*(void (**)(void))(APP_ADDRESS + 4))();
+        }
     }
 
+    // Setup bootloader
     rcc_clock_setup_in_hse_8mhz_out_72mhz();
+
+    //TODO here
+
+    // USB init start
+    rcc_periph_clock_enable(RCC_USB);
+    // USB init end
 
     while (1) {
         
