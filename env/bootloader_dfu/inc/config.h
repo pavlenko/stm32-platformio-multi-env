@@ -1,23 +1,36 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-// API configuration
-//TODO allow possibility to store key in ram OR rtc backup registers (if registers used by user app???)
+#include <libopencm3/stm32/gpio.h>
+
+#ifndef DFU_KEY
 #define DFU_KEY 0x544F4F42u
+#endif
 
 #ifndef DFU_VERSION
 #define DFU_VERSION "v1.1"
 #endif
 
 #ifndef DFU_SIZE
-#define DFU_SIZE (4 * 1024)
+#define DFU_SIZE 4096u
 #endif
 
 #ifndef FLASH_SIZE
-#define FLASH_SIZE 65536 // 64k by default, depends on cpu
+#define FLASH_SIZE 65536u // 64k by default, depends on cpu
 #endif
 
-// USB configuration
+#ifndef DFU_CHECK_GPIO_DISABLED
+
+#ifndef DFU_CHECK_GPIO_PORT
+#define DFU_CHECK_GPIO_PORT GPIOB
+#endif
+
+#ifndef DFU_CHECK_GPIO_PIN
+#define DFU_CHECK_GPIO_PIN GPIO2
+#endif
+
+#endif
+
 #ifndef USB_VID
 #define USB_VID 0x1209u
 #endif
