@@ -1,9 +1,12 @@
-
 #ifndef __REBOOT__HH__
 #define __REBOOT__HH__
 
+#include "stm32f103xb.h"
+#include "flash_config.h"
+
 // Points to the bottom of the stack, we should have 8 bytes free there
-extern uint32_t _stack;
+//extern uint32_t _stack;
+__IO uint32_t _stack = SRAM_BASE + SRAM_SIZE;
 
 // Reboots the system into the bootloader, making sure
 // it enters in DFU mode.
