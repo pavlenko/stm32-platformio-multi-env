@@ -40,12 +40,12 @@
 
 #endif
 
-#ifndef USB_VID
-#define USB_VID 0x1209u
+#ifndef USB_VID //0x1209u
+#define USB_VID 0x1EAF
 #endif
 
-#ifndef USB_PID
-#define USB_PID 0xDB42u
+#ifndef USB_PID //0xDB42u
+#define USB_PID 0x0003
 #endif
 
 #ifndef USB_VENDOR_STRING
