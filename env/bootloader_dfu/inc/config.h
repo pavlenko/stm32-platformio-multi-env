@@ -2,6 +2,7 @@
 #define __CONFIG_H
 
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/rcc.h>
 
 #ifndef DFU_KEY
 #define DFU_KEY 0x544F4F42u
@@ -24,6 +25,10 @@
 #endif
 
 #ifndef DFU_CHECK_GPIO_DISABLED
+
+#ifndef DFU_CHECK_GPIO_RCC
+#define DFU_CHECK_GPIO_RCC RCC_GPIOB
+#endif
 
 #ifndef DFU_CHECK_GPIO_PORT
 #define DFU_CHECK_GPIO_PORT GPIOB
