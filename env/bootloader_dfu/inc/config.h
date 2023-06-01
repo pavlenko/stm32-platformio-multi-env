@@ -17,7 +17,7 @@
 #endif
 
 #ifndef DFU_SIZE
-#define DFU_SIZE 4096u
+#define DFU_SIZE 8192u // 8kb max but used less
 #endif
 
 #ifndef FLASH_SIZE
@@ -49,11 +49,15 @@
 #endif
 
 #ifndef USB_VENDOR_STRING
-#define USB_VENDOR_STRING "JOHN DOE"
+#define USB_VENDOR_STRING "MASTER"
 #endif
 
 #ifndef USB_PRODUCT_STRING
-#define USB_PRODUCT_STRING "DFU Bootloader"
+#define USB_PRODUCT_STRING "HexaPod Mark II Bootloader"
+#endif
+
+#ifndef USB_PRODUCT_SERIAL_NUM
+#define USB_PRODUCT_SERIAL_NUM "HexaPod Mark II"
 #endif
 
 #ifndef USB_INTERFACE_STRING
