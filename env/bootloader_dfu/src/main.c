@@ -147,8 +147,7 @@ static void usbdfu_getstatus_complete(usbd_device *usbd_dev, struct usb_setup_da
                                                  dfu_function.wTransferSize);
                 for (i = 0; i < prog.len; i += 2) {
                     uint16_t *dat = (uint16_t *)(prog.buf + i);
-                    flash_program_half_word(baseaddr + i,
-                                            *dat);
+                    flash_program_half_word(baseaddr + i, *dat);
                 }
             }
             flash_lock();
@@ -165,9 +164,13 @@ static void usbdfu_getstatus_complete(usbd_device *usbd_dev, struct usb_setup_da
     }
 }
 
-static enum usbd_request_return_codes usbdfu_control_request(usbd_device *usbd_dev, struct usb_setup_data *req, uint8_t **buf,
-                                                             uint16_t *len, void (**complete)(usbd_device *usbd_dev, struct usb_setup_data *req))
-{
+static enum usbd_request_return_codes usbdfu_control_request(
+        usbd_device *usbd_dev,
+        struct usb_setup_data *req,
+        uint8_t **buf,
+        uint16_t *len,
+        void (**complete)(usbd_device *usbd_dev, struct usb_setup_data *req)
+) {
     if ((req->bmRequestType & 0x7F) != 0x21)
         return USBD_REQ_NOTSUPP; /* Only accept class request. */
 
@@ -222,10 +225,11 @@ static void usbdfu_set_config(usbd_device *usbd_dev, uint16_t wValue)
     (void)wValue;
 
     usbd_register_control_callback(
-            usbd_dev,
-            USB_REQ_TYPE_CLASS | USB_REQ_TYPE_INTERFACE,
-            USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT,
-            usbdfu_control_request);
+        usbd_dev,
+        USB_REQ_TYPE_CLASS | USB_REQ_TYPE_INTERFACE,
+        USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT,
+        usbdfu_control_request
+    );
 }
 
 int main(void) {
