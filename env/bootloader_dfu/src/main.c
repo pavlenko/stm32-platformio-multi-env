@@ -195,6 +195,10 @@ static enum usbd_request_return_codes usbdfu_control_request(
             /* Abort returns to dfuIDLE state. */
             usbdfu_state = STATE_DFU_IDLE;
             return USBD_REQ_HANDLED;
+        case DFU_DETACH:
+            usbdfu_state = STATE_DFU_MANIFEST_SYNC;
+            *complete = usbdfu_getstatus_complete;
+            return USBD_REQ_HANDLED;
         case DFU_UPLOAD:
             /* Upload not supported for now. */
             return USBD_REQ_NOTSUPP;
