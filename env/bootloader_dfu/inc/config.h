@@ -16,12 +16,12 @@
 #define DFU_VERSION "v1.1"
 #endif
 
-#ifndef DFU_SIZE
-#define DFU_SIZE 8192u // 8kb max but used less
+#ifndef DFU_SIZE // 8kb max but used less
+#define DFU_SIZE 8192u
 #endif
 
-#ifndef FLASH_SIZE
-#define FLASH_SIZE 65536u // 64k by default, depends on cpu
+#ifndef FLASH_SIZE // 64k by default, depends on cpu
+#define FLASH_SIZE 65536u
 #endif
 
 #ifndef DFU_CHECK_GPIO_DISABLED

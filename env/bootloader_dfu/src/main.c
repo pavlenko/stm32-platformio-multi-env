@@ -237,7 +237,7 @@ int main(void) {
 
     // Setup GPIO
     rcc_periph_clock_enable(DFU_CHECK_GPIO_RCC);
-    gpio_set_mode(DFU_CHECK_GPIO_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, DFU_CHECK_GPIO_PIN);
+    gpio_set_mode(DFU_CHECK_GPIO_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_FLOAT, DFU_CHECK_GPIO_PIN);
     gpio_clear(DFU_CHECK_GPIO_PORT, DFU_CHECK_GPIO_PIN);
     for (uint16_t i = 0; i < 512; i++) {
         __asm__("nop");
