@@ -1,4 +1,5 @@
 #include "stdint.h"
+#include "stm32f1xx.h"
 #include "usbd.h"
 
 #define IMR_MSK (CNTR_CTRM  | CNTR_WKUPM | CNTR_SUSPM | CNTR_ERRM  | CNTR_SOFM \
@@ -7,11 +8,14 @@
 __IO uint16_t wIstr;  /* ISTR register last read value */
 
 void usb_irq_handler(void) {
-    //TODO
-    uint32_t i = 0;
-    __IO uint32_t EP[8];
+    if (USB->ISTR & USB_ISTR_CTR) {
+        //TODO (void)PCD_EP_ISR_Handler(hpcd);
+    }
 
-    wIstr = _GetISTR();
+    if (USB->ISTR & USB_ISTR_RESET) {
+        USB->ISTR &= ~USB_ISTR_RESET;
+        //TODO (void)HAL_PCD_SetAddress(hpcd, 0U);
+    }
 
 #if (IMR_MSK & ISTR_SOF)
     if (wIstr & ISTR_SOF & wInterrupt_Mask)
@@ -21,30 +25,6 @@ void usb_irq_handler(void) {
 
 #ifdef SOF_CALLBACK
     SOF_Callback();
-#endif
-  }
-#endif
-    /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
-
-#if (IMR_MSK & ISTR_CTR)
-    if (wIstr & ISTR_CTR & wInterrupt_Mask)
-  {
-    /* servicing of the endpoint correct transfer interrupt */
-    /* clear of the CTR flag into the sub */
-    CTR_LP();
-#ifdef CTR_CALLBACK
-    CTR_Callback();
-#endif
-  }
-#endif
-    /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
-#if (IMR_MSK & ISTR_RESET)
-    if (wIstr & ISTR_RESET & wInterrupt_Mask)
-  {
-    _SetISTR((uint16_t)CLR_RESET);
-    Device_Property.Reset();
-#ifdef RESET_CALLBACK
-    RESET_Callback();
 #endif
   }
 #endif
