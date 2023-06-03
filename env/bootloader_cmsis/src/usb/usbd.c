@@ -68,26 +68,16 @@ void usb_irq_handler(void) {
         //TODO HAL_PCD_SOFCallback(hpcd);
     }
 
-    /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
-#if (IMR_MSK & ISTR_DOVR)
-    if (wIstr & ISTR_DOVR & wInterrupt_Mask)
-  {
-    _SetISTR((uint16_t)CLR_DOVR);
-#ifdef DOVR_CALLBACK
-    DOVR_Callback();
-#endif
-  }
-#endif
-    /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
-#if (IMR_MSK & ISTR_ERR)
-    if (wIstr & ISTR_ERR & wInterrupt_Mask)
-  {
-    _SetISTR((uint16_t)CLR_ERR);
-#ifdef ERR_CALLBACK
-    ERR_Callback();
-#endif
-  }
-#endif
+    if (USB->ISTR & USB_ISTR_ESOF) {
+        USB->ISTR &= (uint16_t ) ~USB_ISTR_ESOF;
+        //TODO some default logic???
+        //TODO callback???
+    }
+
+    if (USB->ISTR & USB_ISTR_ERR) {
+        USB->ISTR &= (uint16_t ) ~USB_ISTR_ERR;
+        //TODO callback???
+    }
     /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
 #if (IMR_MSK & ISTR_ESOF)
