@@ -36,11 +36,10 @@ void usb_irq_handler(void) {
 
     if (USB->ISTR & USB_ISTR_SUSP) {
         /* WA: To Clear Wakeup flag if raised with suspend signal */
-
         uint8_t i, store_ep[8];
         for (i = 0U; i < 8U; i++) {
-            //TODO
-            store_ep[i] = PCD_GET_ENDPOINT(hpcd->Instance, i);/* Store Endpoint register */
+            store_ep[i] = (*(__IO uint16_t *)(&(USB)->EP0R + (i * 2U)));
+            //store_ep[i] = PCD_GET_ENDPOINT(hpcd->Instance, i);/* Store Endpoint register */
         }
 
         USB->CNTR |= (uint16_t) USB_CNTR_FRES;/* FORCE RESET */
@@ -51,8 +50,8 @@ void usb_irq_handler(void) {
         USB->ISTR &= (uint16_t) USB_ISTR_RESET;/* Clear Reset Flag */
 
         for (i = 0U; i < 8U; i++) {
-            //TODO
-            PCD_SET_ENDPOINT(hpcd->Instance, i, store_ep[i]);/* Restore Endpoint register */
+            (*(__IO uint16_t *)(&(USB)->EP0R + (i * 2U)) = (uint16_t)store_ep[i]);
+            //PCD_SET_ENDPOINT(hpcd->Instance, i, store_ep[i]);/* Restore Endpoint register */
         }
 
         USB->CNTR |= (uint16_t) USB_CNTR_FSUSP;/* Force low-power mode in the macro cell */
