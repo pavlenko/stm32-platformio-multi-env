@@ -39,6 +39,7 @@ void usb_irq_handler(void) {
 
         uint8_t i, store_ep[8];
         for (i = 0U; i < 8U; i++) {
+            //TODO
             store_ep[i] = PCD_GET_ENDPOINT(hpcd->Instance, i);/* Store Endpoint register */
         }
 
@@ -50,6 +51,7 @@ void usb_irq_handler(void) {
         USB->ISTR &= (uint16_t) USB_ISTR_RESET;/* Clear Reset Flag */
 
         for (i = 0U; i < 8U; i++) {
+            //TODO
             PCD_SET_ENDPOINT(hpcd->Instance, i, store_ep[i]);/* Restore Endpoint register */
         }
 
@@ -60,17 +62,12 @@ void usb_irq_handler(void) {
         //TODO HAL_PCD_SuspendCallback(hpcd);
     }
 
-#if (IMR_MSK & ISTR_SOF)
-    if (wIstr & ISTR_SOF & wInterrupt_Mask)
-  {
-    _SetISTR((uint16_t)CLR_SOF);
-    bIntPackSOF++;
+    if (USB->ISTR & USB_ISTR_SOF) {
+        USB->ISTR &= (uint16_t) ~USB_ISTR_SOF;
 
-#ifdef SOF_CALLBACK
-    SOF_Callback();
-#endif
-  }
-#endif
+        //TODO HAL_PCD_SOFCallback(hpcd);
+    }
+
     /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 #if (IMR_MSK & ISTR_DOVR)
     if (wIstr & ISTR_DOVR & wInterrupt_Mask)
