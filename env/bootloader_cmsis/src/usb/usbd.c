@@ -17,19 +17,45 @@ void usb_irq_handler(void) {
     uint8_t EP;
 
     if (USB->ISTR & USB_ISTR_CTR) {
-        while (USB->ISTR & USB_ISTR_CTR) {
+        while (USB->ISTR & USB_ISTR_CTR) {// can be without this loop
             ISTR = USB->ISTR;
             EP   = (uint8_t) (ISTR & USB_ISTR_EP_ID);
 
             if (EP == 0u) {
-                //check dir
+                if ((ISTR & USB_ISTR_DIR) == 0) {
+                    *(__IO uint16_t *) (&(USB)->EP0R + (EP * 2U)) |= USB_EP_CTR_RX;
+
+                    //TODO HAL_PCD_DataInStageCallback(hpcd, 0U);
+
+                    //TODO get and save address
+                    /*if ((hpcd->USB_Address > 0U) && (ep->xfer_len == 0U))
+                    {
+                        hpcd->Instance->DADDR = ((uint16_t)hpcd->USB_Address | USB_DADDR_EF);
+                        hpcd->USB_Address = 0U;
+                    }*/
+                } else {
+                    if ((USB->EP0R & USB_EP_SETUP) != 0U) {
+                        //TODO Get SETUP Packet
+
+                        USB->EP0R |= USB_EP_CTR_TX;
+
+                        //TODO HAL_PCD_SetupStageCallback(hpcd);
+                    }
+                    else if ((USB->EP0R & USB_EP_CTR_RX) != 0U)
+                    {
+                        USB->EP0R |= USB_EP_CTR_TX;
+
+                        //TODO Get Control Data OUT Packet
+                    }
+                }
             } else {
                 EP_REG = *(__IO uint16_t *) (&(USB)->EP0R + (EP * 2U));
                 if (EP_REG & USB_EP_CTR_RX) {
-
+                    *(__IO uint16_t *) (&(USB)->EP0R + (EP * 2U)) |= USB_EP_CTR_TX;
                     // handle rx data on concrete endpoint
                 }
                 if (EP_REG & USB_EP_CTR_TX) {
+                    *(__IO uint16_t *) (&(USB)->EP0R + (EP * 2U)) |= USB_EP_CTR_RX;
                     // handle tx data on concrete endpoint
                 }
             }
