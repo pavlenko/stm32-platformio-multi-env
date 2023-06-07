@@ -7,8 +7,35 @@
 
 __IO uint16_t wIstr;  /* ISTR register last read value */
 
+__attribute__((used))
+void USB_LP_CAN1_RX0_IRQHandler(void) {
+    usb_irq_handler();
+}
+
 void usb_irq_handler(void) {
+    uint16_t ISTR, EP_REG;
+    uint8_t EP;
+
     if (USB->ISTR & USB_ISTR_CTR) {
+        while (USB->ISTR & USB_ISTR_CTR) {
+            ISTR = USB->ISTR;
+            EP   = (uint8_t) (ISTR & USB_ISTR_EP_ID);
+
+            if (EP == 0u) {
+                //check dir
+            } else {
+                EP_REG = *(__IO uint16_t *) (&(USB)->EP0R + (EP * 2U));
+                if (EP_REG & USB_EP_CTR_RX) {
+
+                    // handle rx data on concrete endpoint
+                }
+                if (EP_REG & USB_EP_CTR_TX) {
+                    // handle tx data on concrete endpoint
+                }
+            }
+        }
+
+
         //TODO (void)PCD_EP_ISR_Handler(hpcd);
     }
 
