@@ -48,6 +48,21 @@ const uint8_t usb_config_descriptor[] = {
     0x32, // bMaxPower: Maximum power consumption = 100 mA - this current is used for detecting VBus
 };
 
+//TODO DFU Class runtime:
+// - 1x dfu class functional descriptor
+
+const uint8_t usb_dfu_runtime_interface_descriptor[] = {
+    0x09, // bLength: Interface Descriptor size = 0x09 - default
+    0x04, // bDescriptorType: Descriptor Type = USB_DESCRIPTOR_TYPE_INTERFACE - default
+    0x01, // bInterfaceNumber: Number of this interface - depends on descriptor position
+    0x00, // bAlternateSetting: Alternate setting = 0x00 - must be
+    0x00, // bNumEndpoints: Number of endpoints = 0x00 - must be
+    0xFE, // bInterfaceClass = Application Specific Class Code - must be = 0xFE
+    0x01, // bInterfaceSubClass = Device Firmware Upgrade Code - must be 0x01
+    0x01, // bInterfaceProtocol = Runtime protocol - must be 0x01
+    0x00, // iInterface: Index of string descriptor for this interface
+};
+
 int main(void) {
     while (1) {
     }
