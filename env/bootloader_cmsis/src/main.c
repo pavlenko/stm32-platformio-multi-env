@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <stdbool.h>
 
 /*
  * USB Device
@@ -14,7 +13,6 @@
 #define USB_DESCRIPTOR_TYPE_STRING     0x03u
 #define USB_DESCRIPTOR_TYPE_INTERFACE  0x04u
 #define USB_DESCRIPTOR_TYPE_ENDPOINT   0x05u
-#define USB_DESCRIPTOR_TYPE_FUNCTIONAL 0x21u
 
 #define USB_REQUEST_GET_STATUS        0x00u
 #define USB_REQUEST_CLR_FEATURE       0x01u
@@ -27,6 +25,16 @@
 #define USB_REQUEST_GET_INTERFACE     0x0Au
 #define USB_REQUEST_SET_INTERFACE     0x0Bu
 #define USB_REQUEST_SYNCH_FRAME       0x0Cu
+
+#define USB_DFU_DESCRIPTOR_TYPE_FUNCTIONAL 0x21u
+
+#define USB_DFU_REQUEST_DETACH 0x00
+#define USB_DFU_REQUEST_DNLOAD 0x01
+#define USB_DFU_REQUEST_UPLOAD 0x02
+#define USB_DFU_REQUEST_GET_STATUS 0x03
+#define USB_DFU_REQUEST_CLR_STATUS 0x04
+#define USB_DFU_REQUEST_GET_STATE 0x05
+#define USB_DFU_REQUEST_ABORT 0x06
 
 const uint8_t usb_device_descriptor[] = {
     0x12, // bLength: Device descriptor length = 0x12 - default
@@ -77,7 +85,7 @@ const uint8_t usb_dfu_runtime_interface_descriptor[] = {
 // same for runtime and dfu mode
 const uint8_t usb_dfu_runtime_functional_descriptor[] = {
     0x09, // bLength: Interface Descriptor size = 0x09 - default
-    0x21, // bDescriptorType: Descriptor Type = USB_DESCRIPTOR_TYPE_FUNCTIONAL - default
+    0x21, // bDescriptorType: Descriptor Type = USB_DFU_DESCRIPTOR_TYPE_FUNCTIONAL - default
     0x00, // bmAttributes: DFU attributes - depends on implementation
     0x00, // wDetachTimeOut: Wait for DETACH timeout in millis (L byte)
     0x00, // wDetachTimeOut: Wait for DETACH timeout in millis (H byte)
