@@ -82,7 +82,7 @@ const uint8_t usb_dfu_device_descriptor[] = {
     0x12, // bLength: Device descriptor length = 0x12 - default
     0x01, // bDescriptorType: Descriptor Type = USB_DESCRIPTOR_TYPE_DEVICE - default
     0x00, // bcdUSB: USB Specification Release Number = 0x00 (L byte of 0x0100)
-    0x01, // bcdUSB: USB Specification Release Number = 0x01 (H byte of 0x0100)
+    0x02, // bcdUSB: USB Specification Release Number = 0x02 (H byte of 0x0100)
     0x00, // bDeviceClass: Class Code = 0x00 - see interface
     0x00, // bDeviceSubClass: Subclass code = 0x00 - see interface
     0x00, // bDeviceProtocol: Protocol code = 0x00 - see interface
@@ -109,6 +109,18 @@ const uint8_t usb_dfu_config_descriptor[] = {
     0x00, // iConfiguration: Index of string descriptor describing the configuration
     0xC0, // bmAttributes: Configuration characteristics mask = 0xC0 (self-powered) - see specification
     0x32, // bMaxPower: Maximum power consumption = 100 mA - this current is used for detecting VBus
+};
+
+const uint8_t usb_dfu_interface_descriptor[] = {
+    0x09, // bLength: Interface Descriptor size = 0x09 - default
+    0x04, // bDescriptorType: Descriptor Type = USB_DESCRIPTOR_TYPE_INTERFACE - default
+    0x01, // bInterfaceNumber: Number of this interface = 0x01 - must be
+    0x00, // bAlternateSetting: Alternate setting = 0x00 - can be used to access additional memory segments
+    0x00, // bNumEndpoints: Number of endpoints = 0x00 - must be
+    0xFE, // bInterfaceClass = Application Specific Class Code = 0xFE - must be
+    0x01, // bInterfaceSubClass = Device Firmware Upgrade Code = 0x01 - must be
+    0x02, // bInterfaceProtocol = DFU mode protocol - must be 0x02
+    0x00, // iInterface: Index of string descriptor for this interface
 };
 
 int main(void) {
