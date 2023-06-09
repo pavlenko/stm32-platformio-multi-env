@@ -9,13 +9,24 @@
  *       - endpoint descriptor (setup/in/out, index of string descriptor)
  */
 
-#define USB_DESCRIPTOR_TYPE_DEVICE    0x01
-#define USB_DESCRIPTOR_TYPE_CONFIG    0x02
-#define USB_DESCRIPTOR_TYPE_STRING    0x03
-#define USB_DESCRIPTOR_TYPE_INTERFACE 0x04
-#define USB_DESCRIPTOR_TYPE_ENDPOINT  0x05
+#define USB_DESCRIPTOR_TYPE_DEVICE     0x01u
+#define USB_DESCRIPTOR_TYPE_CONFIG     0x02u
+#define USB_DESCRIPTOR_TYPE_STRING     0x03u
+#define USB_DESCRIPTOR_TYPE_INTERFACE  0x04u
+#define USB_DESCRIPTOR_TYPE_ENDPOINT   0x05u
+#define USB_DESCRIPTOR_TYPE_FUNCTIONAL 0x21u
 
-#define USB_DESCRIPTOR_TYPE_FUNCTIONAL  0x21
+#define USB_REQUEST_GET_STATUS        0x00u
+#define USB_REQUEST_CLR_FEATURE       0x01u
+#define USB_REQUEST_SET_FEATURE       0x03u
+#define USB_REQUEST_SET_ADDRESS       0x05u
+#define USB_REQUEST_GET_DESCRIPTOR    0x06u
+#define USB_REQUEST_SET_DESCRIPTOR    0x07u
+#define USB_REQUEST_GET_CONFIGURATION 0x08u
+#define USB_REQUEST_SET_CONFIGURATION 0x09u
+#define USB_REQUEST_GET_INTERFACE     0x0Au
+#define USB_REQUEST_SET_INTERFACE     0x0Bu
+#define USB_REQUEST_SYNCH_FRAME       0x0Cu
 
 const uint8_t usb_device_descriptor[] = {
     0x12, // bLength: Device descriptor length = 0x12 - default
