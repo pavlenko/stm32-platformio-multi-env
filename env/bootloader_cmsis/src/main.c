@@ -29,7 +29,7 @@
 #define USB_REQUEST_TYPE_DIRECTION 0x80 // mask
 #define USB_REQUEST_TYPE_IN        0x80
 /* bits 6..5 : type */
-#define USB_REQUEST_TYPE_TYPE      0x60 //mask
+#define USB_REQUEST_TYPE_TYPE      0x60 // mask
 #define USB_REQUEST_TYPE_STANDARD  0x00
 #define USB_REQUEST_TYPE_CLASS     0x20
 #define USB_REQUEST_TYPE_VENDOR    0x40
@@ -50,6 +50,21 @@
 #define USB_DFU_REQUEST_GET_STATE 0x05
 #define USB_DFU_REQUEST_ABORT 0x06
 
+enum dfu_state {
+	STATE_APP_IDLE,
+	STATE_APP_DETACH,
+	STATE_DFU_IDLE,
+	STATE_DFU_DNLOAD_SYNC,
+	STATE_DFU_DNBUSY,
+	STATE_DFU_DNLOAD_IDLE,
+	STATE_DFU_MANIFEST_SYNC,
+	STATE_DFU_MANIFEST,
+	STATE_DFU_MANIFEST_WAIT_RESET,
+	STATE_DFU_UPLOAD_IDLE,
+	STATE_DFU_ERROR,
+};
+
+//TODO all descriptors must be packet
 const uint8_t usb_device_descriptor[] = {
     0x12, // bLength: Device descriptor length = 0x12 - default
     0x01, // bDescriptorType: Descriptor Type = USB_DESCRIPTOR_TYPE_DEVICE - default
