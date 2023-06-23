@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "usb_standard.h"
 
 /*
  * USB Device
@@ -8,37 +9,6 @@
  *       - endpoint descriptor (setup/in/out, index of string descriptor)
  */
 //TODO attribute fields definitions
-#define USB_DESCRIPTOR_TYPE_DEVICE     0x01
-#define USB_DESCRIPTOR_TYPE_CONFIG     0x02
-#define USB_DESCRIPTOR_TYPE_STRING     0x03
-#define USB_DESCRIPTOR_TYPE_INTERFACE  0x04
-#define USB_DESCRIPTOR_TYPE_ENDPOINT   0x05
-
-#define USB_REQUEST_GET_STATUS        0x00
-#define USB_REQUEST_CLR_FEATURE       0x01
-#define USB_REQUEST_SET_FEATURE       0x03
-#define USB_REQUEST_SET_ADDRESS       0x05
-#define USB_REQUEST_GET_DESCRIPTOR    0x06
-#define USB_REQUEST_SET_DESCRIPTOR    0x07
-#define USB_REQUEST_GET_CONFIGURATION 0x08
-#define USB_REQUEST_SET_CONFIGURATION 0x09
-#define USB_REQUEST_GET_INTERFACE     0x0A
-#define USB_REQUEST_SET_INTERFACE     0x0B
-#define USB_REQUEST_SYNCH_FRAME       0x0C
-
-#define USB_REQUEST_TYPE_DIRECTION 0x80 // mask
-#define USB_REQUEST_TYPE_IN        0x80
-/* bits 6..5 : type */
-#define USB_REQUEST_TYPE_TYPE      0x60 // mask
-#define USB_REQUEST_TYPE_STANDARD  0x00
-#define USB_REQUEST_TYPE_CLASS     0x20
-#define USB_REQUEST_TYPE_VENDOR    0x40
-/* bits 4..0 : recipient */
-#define USB_REQUEST_TYPE_RECIPIENT 0x1F //mask
-#define USB_REQUEST_TYPE_DEVICE    0x00
-#define USB_REQUEST_TYPE_INTERFACE 0x01
-#define USB_REQUEST_TYPE_ENDPOINT  0x02
-#define USB_REQUEST_TYPE_OTHER     0x03
 
 #define USB_DFU_DESCRIPTOR_TYPE_FUNCTIONAL 0x21u
 
@@ -119,7 +89,7 @@ const uint8_t usb_dfu_runtime_functional_descriptor[] = {
     0x00, // wDetachTimeOut: Wait for DETACH timeout in millis (L byte)
     0x00, // wDetachTimeOut: Wait for DETACH timeout in millis (H byte)
     0x00, // wTransferSize: Maximum number of bytes (L byte)
-    0x00, // wTransferSize: Maximum number of bytes (H byte)
+    0x00, // wTransferSize: Maxim_usb_requm number of bytes (H byte)
     0x00, // bcdDFUVersion: DFU Specification release = 0x1A (L byte of 0x011A)
     0x00, // bcdDFUVersion: DFU Specification release = 0x01 (H byte of 0x011A)
 };
@@ -171,7 +141,11 @@ const uint8_t usb_dfu_interface_descriptor[] = {
     0x00, // iInterface: Index of string descriptor for this interface
 };
 
+usb_device_t usb;
+
 int main(void) {
+
     while (1) {
+        //_usb_request();
     }
 }

@@ -1,3 +1,6 @@
 .pio
+.vscode
+.idea
+__pycache__/
 CMakeListsPrivate.txt
 cmake-build-*/ 
