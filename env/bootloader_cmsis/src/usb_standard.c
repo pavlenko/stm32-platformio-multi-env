@@ -207,8 +207,8 @@ static usb_result_t usb_set_configuration(usb_device_t *dev, usb_request_t *req,
 
 		/* reset all alternate settings configuration */
 		for (i = 0; i < config_descr->bNumInterfaces; i++) {
-			if (config_descr->interface[i].cur_altsetting) {
-				*config_descr->interface[i].cur_altsetting = 0;
+			if (config_descr->interfaces[i].cur_altsetting) {
+				*config_descr->interfaces[i].cur_altsetting = 0;
 			}
 		}
 	}
@@ -232,7 +232,7 @@ static usb_result_t usb_get_interface(usb_device_t *dev, usb_request_t *req, uin
 	}
 
 	*len = 1;
-	cur_altsetting = config_descr->interface[req->wIndex].cur_altsetting;//TODO optimize
+	cur_altsetting = config_descr->interfaces[req->wIndex].cur_altsetting;//TODO optimize
 	(*buf)[0] = (cur_altsetting) ? *cur_altsetting : 0;
 
 	return USB_RESULT_HANDLED;
@@ -241,7 +241,7 @@ static usb_result_t usb_get_interface(usb_device_t *dev, usb_request_t *req, uin
 static usb_result_t usb_set_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
 	const usb_config_descriptor_t *config_descr = &dev->config_descr[dev->current_config - 1];
-	const struct usb_interface *iface;
+	const usb_interface_t *iface;
 
 	(void)buf;
 
@@ -249,7 +249,7 @@ static usb_result_t usb_set_interface(usb_device_t *dev, usb_request_t *req, uin
 		return USB_RESULT_NOTSUPP;
 	}
 
-	iface = &config_descr->interface[req->wIndex];
+	iface = &config_descr->interfaces[req->wIndex];
 
 	if (req->wValue >= iface->num_altsetting) {
 		return USB_RESULT_NOTSUPP;

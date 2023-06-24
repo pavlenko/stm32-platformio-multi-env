@@ -35,7 +35,7 @@ enum dfu_state {
 };
 
 //TODO all descriptors must be packet
-const uint8_t usb_device_descriptor[] = {
+const uint8_t __usb_device_descriptor[] = {
     0x12, // bLength: Device descriptor length = 0x12 - default
     0x01, // bDescriptorType: Descriptor Type = USB_DESCRIPTOR_TYPE_DEVICE - default
     0x00, // bcdUSB: USB Specification Release Number = 0x00 (L byte of 0x0200)
@@ -56,7 +56,7 @@ const uint8_t usb_device_descriptor[] = {
     0x01, // bNumConfigurations: Number of possible configurations
 };
 
-const uint8_t usb_config_descriptor[] = {
+const uint8_t __usb_config_descriptor[] = {
     0x09, // bLength: Configuration Descriptor size = 0x09 - default
     0x02, // bDescriptorType: Descriptor Type = USB_DESCRIPTOR_TYPE_CONFIG - default
     0x00, // wTotalLength: Bytes returned = (L byte) - depends on configuration sub-descriptors
@@ -69,7 +69,7 @@ const uint8_t usb_config_descriptor[] = {
 };
 
 // DFU runtime descriptors start
-const uint8_t usb_dfu_runtime_interface_descriptor[] = {
+const uint8_t __usb_dfu_runtime_interface_descriptor[] = {
     0x09, // bLength: Interface Descriptor size = 0x09 - default
     0x04, // bDescriptorType: Descriptor Type = USB_DESCRIPTOR_TYPE_INTERFACE - default
     0x01, // bInterfaceNumber: Number of this interface - depends on descriptor position
@@ -82,7 +82,7 @@ const uint8_t usb_dfu_runtime_interface_descriptor[] = {
 };
 
 // same for runtime and dfu mode
-const uint8_t usb_dfu_runtime_functional_descriptor[] = {
+const uint8_t __usb_dfu_runtime_functional_descriptor[] = {
     0x09, // bLength: Interface Descriptor size = 0x09 - default
     0x21, // bDescriptorType: Descriptor Type = USB_DFU_DESCRIPTOR_TYPE_FUNCTIONAL - default
     0x00, // bmAttributes: DFU attributes - depends on implementation
@@ -96,7 +96,7 @@ const uint8_t usb_dfu_runtime_functional_descriptor[] = {
 // DFU runtime descriptors end
 
 // DFU mode descriptors start
-const uint8_t usb_dfu_device_descriptor[] = {
+const uint8_t __usb_dfu_device_descriptor[] = {
     0x12, // bLength: Device descriptor length = 0x12 - default
     0x01, // bDescriptorType: Descriptor Type = USB_DESCRIPTOR_TYPE_DEVICE - default
     0x00, // bcdUSB: USB Specification Release Number = 0x00 (L byte of 0x0100)
@@ -117,7 +117,7 @@ const uint8_t usb_dfu_device_descriptor[] = {
     0x01, // bNumConfigurations: Number of possible configurations = 0x01 - must be
 };
 
-const uint8_t usb_dfu_config_descriptor[] = {
+const uint8_t __usb_dfu_config_descriptor[] = {
     0x09, // bLength: Configuration Descriptor size = 0x09 - default
     0x02, // bDescriptorType: Descriptor Type = USB_DESCRIPTOR_TYPE_CONFIG - default
     0x00, // wTotalLength: Bytes returned = (L byte) - depends on configuration sub-descriptors
@@ -129,7 +129,7 @@ const uint8_t usb_dfu_config_descriptor[] = {
     0x32, // bMaxPower: Maximum power consumption = 100 mA - this current is used for detecting VBus
 };
 
-const uint8_t usb_dfu_interface_descriptor[] = {
+const uint8_t __usb_dfu_interface_descriptor[] = {
     0x09, // bLength: Interface Descriptor size = 0x09 - default
     0x04, // bDescriptorType: Descriptor Type = USB_DESCRIPTOR_TYPE_INTERFACE - default
     0x01, // bInterfaceNumber: Number of this interface = 0x01 - must be
@@ -141,11 +141,72 @@ const uint8_t usb_dfu_interface_descriptor[] = {
     0x00, // iInterface: Index of string descriptor for this interface
 };
 
-usb_device_t usb;
+// DFU mode VID/PID
+#define USB_VID 0x1EAF
+#define USB_PID 0x0004
+
+uint8_t buffer[1024];
+
+usb_interface_descriptor_t usb_interface_descriptor = {
+    .bLength            = USB_DESCRIPTOR_SIZE_INTERFACE,
+    .bDescriptorType    = USB_DESCRIPTOR_TYPE_INTERFACE,
+    .bInterfaceNumber   = 0x00,
+    .bAlternateSetting  = 0x00,
+    .bNumEndpoints      = 0x00,
+    .bInterfaceClass    = 0xFE, // DFU Class
+    .bInterfaceSubClass = 0x01,
+    .bInterfaceProtocol = 0x02,
+    .iInterface         = 0x04,
+
+    //TODO interface 0 -> altsetting 0 -> root interface
+    //TODO altsettings -> additional interface descriptors
+};
+
+const usb_interface_t interfaces[] = {
+    {.altsettings = &usb_interface_descriptor, .num_altsetting = 1}
+};
+
+usb_config_descriptor_t usb_config_descriptor = {
+    .bLength             = USB_DESCRIPTOR_SIZE_CONFIG,
+    .bDescriptorType     = USB_DESCRIPTOR_TYPE_CONFIG,
+    .wTotalLength        = 0x00,// calculated on fly
+    .bNumInterfaces      = 0x01,
+    .bConfigurationValue = 0x01,
+    .iConfiguration      = 0x00,
+    .bmAttributes        = USB_CONFIG_ATTR_DEFAULT | USB_CONFIG_ATTR_SELF_POWERED,
+    .bMaxPower           = 0x32,// 0x32 = 50, milliampers
+
+    .interfaces = interfaces,
+};
+
+usb_device_descriptor_t usb_device_descriptor = {
+    .bLength            = USB_DESCRIPTOR_SIZE_DEVICE,
+    .bDescriptorType    = USB_DESCRIPTOR_TYPE_DEVICE,
+    .bcdUSB             = 0x0200,
+    .bDeviceClass       = 0x00,
+    .bDeviceSubClass    = 0x00,
+    .bDeviceProtocol    = 0x00,
+    .bMaxPacketSize0    = 0x40,
+    .idVendor           = USB_VID,
+    .idProduct          = USB_PID,
+    .bcdDevice          = 0x0200,
+    .iManufacturer      = 0x01,
+    .iProduct           = 0x02,
+    .iSerialNumber      = 0x03,
+    .bNumConfigurations = 0x01,
+};
+
+usb_device_t usb_device = {
+    .device_descr = &usb_device_descriptor,
+    .config_descr = &usb_config_descriptor,
+};
 
 int main(void) {
+    uint8_t *buf = &buffer;
+    uint16_t len = 0;
 
+    usb_request_t req = {};
     while (1) {
-        //_usb_request();
+        _usb_request(&usb_device, &req, &buf, &len);
     }
 }
