@@ -14,6 +14,8 @@ static struct {
 
 uint8_t dfu_get_status(usb_device_t *dev, uint32_t *bwPollTimeout)
 {
+    //TODO where to store dfu state pointer
+
     switch (dfu_state) {
         case DFU_STATE_DFU_DNLOAD_SYNC:
             dfu_state = DFU_STATE_DFU_DNBUSY;

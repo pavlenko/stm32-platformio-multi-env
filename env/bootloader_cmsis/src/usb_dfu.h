@@ -72,6 +72,14 @@ typedef struct {
     uint16_t bcdDFUVersion;
 } __attribute__((packed)) dfu_functional_descriptor_t;
 
+typedef struct {
+	dfu_state_t state;
+	uint8_t *buf;
+    uint16_t len;
+    uint32_t address;
+    uint16_t block_num;
+} dfu_t;
+
 usb_result_t dfu_control_request(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 
 __attribute__((weak))

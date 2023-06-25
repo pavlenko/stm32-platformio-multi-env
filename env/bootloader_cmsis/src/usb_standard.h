@@ -176,12 +176,17 @@ typedef struct usb_cb_control_s {
 } usb_cb_control_t;
 
 typedef usb_result_t (*usb_cb_request_t)(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+
+typedef void (*usb_cb_control_complete_t)(usb_device_t *dev, usb_request_t *req, void *arg);
 typedef void (*usb_cb_set_configuration_t)(usb_device_t *dev, uint16_t wValue);
 
 typedef struct usb_control_s {
-	/* data */
-};
-
+	uint8_t *ctrl_buf;
+	uint16_t ctrl_len;
+	usb_request_t req __attribute__((aligned(4)));
+	usb_cb_control_complete_t complete_cb;
+	void *complete_arg;
+} usb_control_t;
 
 typedef struct usb_device_s {
     const usb_device_descriptor_t *device_descr;
@@ -195,6 +200,8 @@ typedef struct usb_device_s {
 
 	uint8_t *ctrl_buf;  /**< Internal buffer used for control transfers */
 	uint16_t ctrl_len;
+
+	usb_control_t control;
 
 	//TODO callbacks...
 	usb_cb_control_t cb_control[USB_MAX_CB_CONTROL];

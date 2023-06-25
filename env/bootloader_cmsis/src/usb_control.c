@@ -114,10 +114,7 @@ void usb_control_out(usb_device_t *dev, uint8_t ea)
             if (usb_control_recv_chunk(dev) < 0) {
                 break;
             }
-            /*
-            * We have now received the full data payload.
-            * Invoke callback to process.
-            */
+            /* We have now received the full data payload. Invoke callback to process. */
             if (usb_control_request_dispatch(dev, &(dev->control_state.req))) {
                 /* Go to status stage on success. */
                 usbd_ep_write_packet(dev, 0, NULL, 0);
@@ -130,7 +127,10 @@ void usb_control_out(usb_device_t *dev, uint8_t ea)
             usbd_ep_read_packet(dev, 0, NULL, 0);
             dev->control_state.state = USB_STATE_IDLE;
             if (dev->control_state.complete) {
-                dev->control_state.complete(dev, &(dev->control_state.req));
+                dev->control_state.complete(
+					dev,
+					&(dev->control_state.req)
+				);
             }
             dev->control_state.complete = NULL;
             break;
@@ -142,9 +142,9 @@ void usb_control_out(usb_device_t *dev, uint8_t ea)
 void usb_control_in(usb_device_t *dev, uint8_t ea)
 {
 	(void) ea;
-	struct usb_setup_data *req = &(dev->control_state.req);
+	usb_request_t *req = &(dev->control.req);
 
-	switch (usbd_dev->control_state.state) {
+	switch (dev->control_state.state) {
         case USB_STATE_DATA_IN:
             usb_control_send_chunk(dev);
             break;
@@ -153,13 +153,13 @@ void usb_control_in(usb_device_t *dev, uint8_t ea)
             usbd_ep_nak_set(dev, 0, 0);
             break;
         case USB_STATE_STATUS_IN:
-            if (dev->control_state.complete) {
-                dev->control_state.complete(usbd_dev, &(usbd_dev->control_state.req));
+            if (dev->control.complete_cb) {
+                dev->control.complete_cb(dev, req);
             }
 
             /* Exception: Handle SET ADDRESS function here... */
             if ((req->bmRequestType == 0) && (req->bRequest == USB_REQUEST_SET_ADDRESS)) {
-                usbd_dev->driver->set_address(dev, req->wValue);
+                dev->driver->set_address(dev, req->wValue);
             }
             dev->control_state.state = USB_STATE_IDLE;
             break;

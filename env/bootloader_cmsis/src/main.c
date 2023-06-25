@@ -194,7 +194,9 @@ usb_device_t usb_device = {
     .config_descr = &usb_config_descriptor,
     .strings = usb_strings,
     .num_strings = 4,
-    .cb_control = {{.cb = dfu_control_request}},
+    .cb_control = {
+        {.cb = dfu_control_request},//TODO here we can pass pointer to some custom structure
+    },
 };
 
 void dfu_system_reset()
