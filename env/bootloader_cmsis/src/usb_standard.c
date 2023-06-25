@@ -213,7 +213,10 @@ static usb_result_t usb_set_configuration(usb_device_t *dev, usb_request_t *req,
     _usb_reset_endpoints(dev);
 
 	if (dev->cb_set_configuration) {
-		dev->cb_request = NULL;//TODO allow multiple
+		for (i = 0; i < USB_MAX_CB_CONTROL; i++) {
+			dev->cb_control[i].cb = NULL;
+		}
+		
 		dev->cb_set_configuration(dev, req->wValue);//TODO allow multiple
 	}
 
