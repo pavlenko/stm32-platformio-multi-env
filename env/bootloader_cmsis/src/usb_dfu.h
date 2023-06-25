@@ -74,6 +74,21 @@ typedef struct {
 
 usb_result_t dfu_control_request(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 
+__attribute__((weak))
+void dfu_system_reset();
+
+__attribute__((weak))
+void dfu_memory_unlock();
+
+__attribute__((weak))
+void dfu_memory_lock();
+
+__attribute__((weak))
+void dfu_memory_erase_page(uint32_t address);
+
+__attribute__((weak))
+void dfu_memory_write_uint16(uint32_t address, uint16_t data);
+
 #ifdef __cplusplus
 }
 #endif

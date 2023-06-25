@@ -197,6 +197,26 @@ usb_device_t usb_device = {
     .cb_control = {{.cb = dfu_control_request}},
 };
 
+void dfu_system_reset()
+{}
+
+void dfu_memory_unlock()
+{}
+
+void dfu_memory_lock()
+{}
+
+void dfu_memory_erase_page(uint32_t address)
+{
+    (void) address;
+}
+
+void dfu_memory_write_uint16(uint32_t address, uint16_t data)
+{
+    (void) address;
+    (void) data;
+}
+
 int main(void) {
     uint8_t *buf = &buffer;
     uint16_t len = 0;

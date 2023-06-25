@@ -392,33 +392,6 @@ usb_result_t _usb_request(usb_device_t *dev, usb_request_t *req, uint8_t **buf, 
     return USB_RESULT_NOTSUPP;
 }
 
-//TODO move to usb_control
-static usb_result_t usb_control_request_dispatch(usb_device_t *dev, usb_request_t *req)
-{
-	uint8_t i;
-	usb_result_t result;
-
-	for (i = 0; i < USB_MAX_CB_CONTROL; i++) {
-		if (dev->cb_control[i].cb == NULL) {
-			break;
-		}
-		if ((req->bmRequestType & dev->cb_control[i].mask) == dev->cb_control[i].type) {
-			result = dev->cb_control[i].cb(
-				dev,
-				 req,
-				&(dev->ctrl_buf),
-				&(dev->ctrl_len)
-			);//TODO pass onComplete callback???
-			if (result == USB_RESULT_HANDLED || result == USB_RESULT_NOTSUPP) {
-				return result;
-			}
-		}
-	}
-
-	return _usb_request(dev, req, &(dev->ctrl_buf), &(dev->ctrl_len));
-}
-
-
 //TODO all endpoint manipulation functions
 __attribute__((weak))
 void _usb_reset_endpoints(usb_device_t *dev) {
