@@ -35,12 +35,12 @@ static void dfu_get_status_complete(usb_device_t *dev, usb_request_t *req)
 
 	switch (dfu_state) {
         case DFU_STATE_DFU_DNBUSY:
-            flash_unlock();//TODO flash callback
+            dfu_memory_unlock();
             if (prog.blocknum == 0) {
                 switch (prog.buf[0]) {
                     case DFU_CMD_ERASE:
                         uint32_t *dat = (uint32_t *)(prog.buf + 1);
-                        flash_erase_page(*dat);//TODO flash callback
+                        dfu_memory_erase_page(*dat);
                         break;
                     case DFU_CMD_SET_ADDRESS:
                         uint32_t *dat = (uint32_t *)(prog.buf + 1);
@@ -51,17 +51,16 @@ static void dfu_get_status_complete(usb_device_t *dev, usb_request_t *req)
                 uint32_t baseaddr = prog.addr + ((prog.blocknum - 2) * dfu_function.wTransferSize);//TODO get descriptor
                 for (i = 0; i < prog.len; i += 2) {
                     uint16_t *dat = (uint16_t *)(prog.buf + i);
-                    flash_program_half_word(baseaddr + i, *dat);//TODO flash callback
+                    dfu_memory_write_uint16(baseaddr + i, *dat);
                 }
             }
-            flash_lock();//TODO flash callback
+            dfu_memory_lock();
 
             /* Jump straight to dfuDNLOAD-IDLE, skipping dfuDNLOAD-SYNC. */
             dfu_state = DFU_STATE_DFU_DNLOAD_IDLE;
             return;
         case DFU_STATE_DFU_MANIFEST:
-            /* USB device must detach, we just reset... */
-            scb_reset_system();//TODO reset callback
+            dfu_system_reset();/* USB device must detach, we just reset... */
             return;
         default:
             return;
