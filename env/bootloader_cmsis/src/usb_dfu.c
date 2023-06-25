@@ -96,7 +96,7 @@ usb_result_t dfu_control_request(usb_device_t *dev, usb_request_t *req, uint8_t 
             return USB_RESULT_HANDLED;
         case DFU_REQUEST_DETACH:
             dfu_state = DFU_STATE_DFU_MANIFEST_SYNC;
-            *complete = dfu_get_status_complete;
+            *complete = dfu_get_status_complete;//TODO OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
             return USB_RESULT_HANDLED;
         case DFU_REQUEST_UPLOAD:/* Upload not supported for now. */
             return USB_RESULT_NOTSUPP;

@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -69,6 +70,17 @@ typedef enum usb_result_e {
 	USB_RESULT_HANDLED = 1,
 	USB_RESULT_NEXT_CALLBACK = 2,
 } usb_result_t;
+
+typedef enum usb_state_e {
+    USB_STATE_IDLE,
+    USB_STATE_STALLED,
+    USB_STATE_DATA_IN,
+    USB_STATE_LAST_DATA_IN,
+    USB_STATE_DATA_OUT,
+    USB_STATE_LAST_DATA_OUT,
+    USB_STATE_STATUS_IN,
+    USB_STATE_STATUS_OUT,
+} usb_state_t;
 
 /* USB Setup Data structure - Table 9-2 */
 typedef struct usb_request_s {
@@ -179,13 +191,16 @@ typedef usb_result_t (*usb_cb_request_t)(usb_device_t *dev, usb_request_t *req, 
 
 typedef void (*usb_cb_control_complete_t)(usb_device_t *dev, usb_request_t *req, void *arg);
 typedef void (*usb_cb_set_configuration_t)(usb_device_t *dev, uint16_t wValue);
+typedef void (*usb_cb_endpoint)(usb_device_t *dev, uint8_t ep);
 
 typedef struct usb_control_s {
+	usb_state_t state;
+	usb_request_t req __attribute__((aligned(4)));
 	uint8_t *ctrl_buf;
 	uint16_t ctrl_len;
-	usb_request_t req __attribute__((aligned(4)));
 	usb_cb_control_complete_t complete_cb;
 	void *complete_arg;
+	bool needs_zlp;
 } usb_control_t;
 
 typedef struct usb_device_s {
