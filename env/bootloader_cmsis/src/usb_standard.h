@@ -16,6 +16,7 @@
 #define USB_DESCRIPTOR_SIZE_DEVICE    0x12
 #define USB_DESCRIPTOR_SIZE_CONFIG    0x09
 #define USB_DESCRIPTOR_SIZE_INTERFACE 0x09
+#define USB_DESCRIPTOR_SIZE_ENDPOINT  0x07
 
 /* USB Configuration Descriptor bmAttributes bit definitions */
 #define USB_CONFIG_ATTR_DEFAULT       0x80 /* always required (USB2.0 table 9-10) */
@@ -92,6 +93,20 @@ typedef struct {
 	uint8_t bNumConfigurations;
 } __attribute__((packed)) usb_device_descriptor_t;
 
+/* USB Standard Endpoint Descriptor - Table 9-13 */
+typedef struct {
+	uint8_t bLength;
+	uint8_t bDescriptorType;
+	uint8_t bEndpointAddress;
+	uint8_t bmAttributes;
+	uint16_t wMaxPacketSize;
+	uint8_t bInterval;
+
+	/* Descriptor ends here.  The following are used internally: */
+	const void *extra_ptr;
+	uint8_t extra_len;
+} __attribute__((packed)) usb_endpoint_descriptor_t;
+
 /* USB Standard Interface Descriptor - Table 9-12 */
 typedef struct {
 	uint8_t bLength;
@@ -105,9 +120,9 @@ typedef struct {
 	uint8_t iInterface;
 
 	/* Descriptor ends here.  The following are used internally: */
-	const struct usb_endpoint_descriptor *endpoint;//TODO
-	const void *extra;
-	int extralen;
+	const usb_endpoint_descriptor_t *endpoint;
+	const void *extra_ptr;
+	uint8_t extra_len;
 } __attribute__((packed)) usb_interface_descriptor_t;
 
 /* USB Standard Interface Descriptor container for altsettings */

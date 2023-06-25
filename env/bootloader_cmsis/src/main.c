@@ -147,7 +147,33 @@ const uint8_t __usb_dfu_interface_descriptor[] = {
 
 uint8_t buffer[1024];
 
-usb_interface_descriptor_t usb_interface_descriptor = {
+// TODO to dfu class header
+#define DFU_DESCRIPTOR_TYPE_FUNCTIONAL 0x21
+#define DFU_ATTR_CAN_DOWNLOAD          0x01
+#define DFU_ATTR_CAN_UPLOAD            0x02
+#define DFU_ATTR_MANIFEST_TOLERANT     0x04
+#define DFU_ATTR_WILL_DETACH           0x08
+
+typedef struct {
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t bmAttributes;
+    uint16_t wDetachTimeout;
+    uint16_t wTransferSize;
+    uint16_t bcdDFUVersion;
+} __attribute__((packed)) dfu_functional_descriptor_t;
+// TODO to dfu class header END
+
+dfu_functional_descriptor_t dfu_functional_descriptor = {
+    .bLength         = sizeof(dfu_functional_descriptor_t),
+    .bDescriptorType = DFU_DESCRIPTOR_TYPE_FUNCTIONAL,
+    .bmAttributes    = DFU_ATTR_CAN_UPLOAD | DFU_ATTR_CAN_DOWNLOAD | DFU_ATTR_WILL_DETACH,
+    .wDetachTimeout  = 0xFF,
+    .wTransferSize   = 0x0400, // 0x0400 = 1024
+    .bcdDFUVersion   = 0x011A,
+};
+
+usb_interface_descriptor_t dfu_interface_descriptor = {
     .bLength            = USB_DESCRIPTOR_SIZE_INTERFACE,
     .bDescriptorType    = USB_DESCRIPTOR_TYPE_INTERFACE,
     .bInterfaceNumber   = 0x00,
@@ -158,12 +184,12 @@ usb_interface_descriptor_t usb_interface_descriptor = {
     .bInterfaceProtocol = 0x02,
     .iInterface         = 0x04,
 
-    //TODO interface 0 -> altsetting 0 -> root interface
-    //TODO altsettings -> additional interface descriptors
+    .extra_ptr = &dfu_functional_descriptor,
+    .extra_len = sizeof(dfu_functional_descriptor),
 };
 
-const usb_interface_t interfaces[] = {
-    {.altsettings = &usb_interface_descriptor, .num_altsetting = 1}
+usb_interface_t interfaces[] = {
+    {.altsettings = &dfu_interface_descriptor, .num_altsetting = 1}
 };
 
 usb_config_descriptor_t usb_config_descriptor = {
