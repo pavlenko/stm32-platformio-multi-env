@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "usb_standard.h"
+#include "usb_dfu.h"
 
 /*
  * USB Device
@@ -9,30 +10,6 @@
  *       - endpoint descriptor (setup/in/out, index of string descriptor)
  */
 //TODO attribute fields definitions
-
-#define USB_DFU_DESCRIPTOR_TYPE_FUNCTIONAL 0x21u
-
-#define USB_DFU_REQUEST_DETACH 0x00
-#define USB_DFU_REQUEST_DNLOAD 0x01
-#define USB_DFU_REQUEST_UPLOAD 0x02
-#define USB_DFU_REQUEST_GET_STATUS 0x03
-#define USB_DFU_REQUEST_CLR_STATUS 0x04
-#define USB_DFU_REQUEST_GET_STATE 0x05
-#define USB_DFU_REQUEST_ABORT 0x06
-
-enum dfu_state {
-	STATE_APP_IDLE,
-	STATE_APP_DETACH,
-	STATE_DFU_IDLE,
-	STATE_DFU_DNLOAD_SYNC,
-	STATE_DFU_DNBUSY,
-	STATE_DFU_DNLOAD_IDLE,
-	STATE_DFU_MANIFEST_SYNC,
-	STATE_DFU_MANIFEST,
-	STATE_DFU_MANIFEST_WAIT_RESET,
-	STATE_DFU_UPLOAD_IDLE,
-	STATE_DFU_ERROR,
-};
 
 //TODO all descriptors must be packet
 const uint8_t __usb_device_descriptor[] = {
@@ -147,23 +124,6 @@ const uint8_t __usb_dfu_interface_descriptor[] = {
 
 uint8_t buffer[1024];
 
-// TODO to dfu class header
-#define DFU_DESCRIPTOR_TYPE_FUNCTIONAL 0x21
-#define DFU_ATTR_CAN_DOWNLOAD          0x01
-#define DFU_ATTR_CAN_UPLOAD            0x02
-#define DFU_ATTR_MANIFEST_TOLERANT     0x04
-#define DFU_ATTR_WILL_DETACH           0x08
-
-typedef struct {
-    uint8_t bLength;
-    uint8_t bDescriptorType;
-    uint8_t bmAttributes;
-    uint16_t wDetachTimeout;
-    uint16_t wTransferSize;
-    uint16_t bcdDFUVersion;
-} __attribute__((packed)) dfu_functional_descriptor_t;
-// TODO to dfu class header END
-
 dfu_functional_descriptor_t dfu_functional_descriptor = {
     .bLength         = sizeof(dfu_functional_descriptor_t),
     .bDescriptorType = DFU_DESCRIPTOR_TYPE_FUNCTIONAL,
@@ -222,9 +182,19 @@ usb_device_descriptor_t usb_device_descriptor = {
     .bNumConfigurations = 0x01,
 };
 
+static const char *usb_strings[] = {
+    "MASTER",
+    "HexaPod Mark II Bootloader",
+    "HexaPod Mark II",
+    "@Internal Flash   /0x08000000/8*001Ka,56*001Kg",
+};
+
 usb_device_t usb_device = {
     .device_descr = &usb_device_descriptor,
     .config_descr = &usb_config_descriptor,
+    .strings = usb_strings,
+    .num_strings = 4,
+    .cb_control = {{.cb = dfu_control_request}},
 };
 
 int main(void) {

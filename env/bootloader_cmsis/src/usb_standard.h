@@ -1,6 +1,10 @@
 #ifndef __USB_STANDARD_H
 #define __USB_STANDARD_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -60,14 +64,14 @@
 
 #define USB_LANGID_ENGLISH_US 0x409
 
-typedef enum {
+typedef enum usb_result_e {
 	USB_RESULT_NOTSUPP = 0,
 	USB_RESULT_HANDLED = 1,
 	USB_RESULT_NEXT_CALLBACK = 2,
 } usb_result_t;
 
 /* USB Setup Data structure - Table 9-2 */
-typedef struct {
+typedef struct usb_request_s {
 	uint8_t bmRequestType;
 	uint8_t bRequest;
 	uint16_t wValue;
@@ -76,7 +80,7 @@ typedef struct {
 } __attribute__((packed)) usb_request_t;
 
 /* USB Standard Device Descriptor - Table 9-8 */
-typedef struct {
+typedef struct usb_device_descriptor_s {
 	uint8_t bLength;
 	uint8_t bDescriptorType;
 	uint16_t bcdUSB;
@@ -94,7 +98,7 @@ typedef struct {
 } __attribute__((packed)) usb_device_descriptor_t;
 
 /* USB Standard Endpoint Descriptor - Table 9-13 */
-typedef struct {
+typedef struct usb_endpoint_descriptor_s {
 	uint8_t bLength;
 	uint8_t bDescriptorType;
 	uint8_t bEndpointAddress;
@@ -108,7 +112,7 @@ typedef struct {
 } __attribute__((packed)) usb_endpoint_descriptor_t;
 
 /* USB Standard Interface Descriptor - Table 9-12 */
-typedef struct {
+typedef struct usb_interface_descriptor_s {
 	uint8_t bLength;
 	uint8_t bDescriptorType;
 	uint8_t bInterfaceNumber;
@@ -126,7 +130,7 @@ typedef struct {
 } __attribute__((packed)) usb_interface_descriptor_t;
 
 /* USB Standard Interface Descriptor container for altsettings */
-typedef struct {
+typedef struct usb_interface_s {
 	const usb_interface_descriptor_t *altsettings;
 
 	/* Descriptor ends here.  The following are used internally: */
@@ -136,7 +140,7 @@ typedef struct {
 } usb_interface_t;
 
 /* USB Standard Configuration Descriptor - Table 9-10 */
-typedef struct {
+typedef struct usb_config_descriptor_s {
 	uint8_t bLength;
 	uint8_t bDescriptorType;
 	uint16_t wTotalLength;
@@ -152,16 +156,33 @@ typedef struct {
 
 // Table 9-15 specifies String Descriptor Zero.
 // Table 9-16 specified UNICODE String Descriptor.
-typedef struct {
+typedef struct usb_string_descriptor_s {
 	uint8_t bLength;
 	uint8_t bDescriptorType;
 	uint16_t wData[];
 } __attribute__((packed)) usb_string_descriptor_t;
 
-typedef struct {
+typedef struct usb_device_s usb_device_t;
+
+//TODO configurable
+#define USB_MAX_CB_CONTROL 4
+#define USB_MAX_CB_SET_CONFIGURATION 4
+
+// Callback types
+typedef struct usb_cb_control_s {
+	usb_result_t (*cb)(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+	uint8_t mask;
+	uint8_t type;
+} usb_cb_control_t;
+
+typedef usb_result_t (*usb_cb_request_t)(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+typedef void (*usb_cb_set_configuration_t)(usb_device_t *dev, uint16_t wValue);
+
+typedef struct usb_device_s {
     const usb_device_descriptor_t *device_descr;
 	const usb_config_descriptor_t *config_descr;
-	const char * const *strings;//TODO string descriptors instead of just strings???
+	//const usb_string_descriptor_t *string_descr; //TODO try descriptors
+	const char * const *strings;
 	const uint8_t num_strings;
 
 	uint8_t current_address;
@@ -169,6 +190,10 @@ typedef struct {
 
 	uint8_t *ctrl_buf;  /**< Internal buffer used for control transfers */
 	uint16_t ctrl_len;
+
+	//TODO callbacks...
+	usb_cb_control_t cb_control[USB_MAX_CB_CONTROL];
+	usb_cb_set_configuration_t cb_set_configuration;
 } __attribute__((packed)) usb_device_t;
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -176,5 +201,9 @@ usb_result_t _usb_request(usb_device_t *dev, usb_request_t *req, uint8_t **buf, 
 
 __attribute__((weak))
 void _usb_reset_endpoints(usb_device_t *dev);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //__USB_STANDARD_H

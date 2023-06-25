@@ -133,15 +133,12 @@ static usb_result_t usb_get_descriptor(usb_device_t *dev, usb_request_t *req, ui
 					return USB_RESULT_NOTSUPP;// String index is not in range.
 				}
 
-				/* Strings with Language ID differnet from
-				* USB_LANGID_ENGLISH_US are not supported */
+				/* Strings with Language ID differnet from USB_LANGID_ENGLISH_US are not supported */
 				if (req->wIndex != USB_LANGID_ENGLISH_US) {
 					return USB_RESULT_NOTSUPP;
 				}
 
-				/* This string is returned as UTF16, hence the
-				* multiplication
-				*/
+				/* This string is returned as UTF16, hence the multiplication */
 				sd->bLength = (strlen(dev->strings[array_idx]) * 2) + sizeof(sd->bLength) + sizeof(sd->bDescriptorType);
 
 				*len = MIN(*len, sd->bLength);
@@ -213,12 +210,13 @@ static usb_result_t usb_set_configuration(usb_device_t *dev, usb_request_t *req,
 		}
 	}
 
-
     _usb_reset_endpoints(dev);
 
-    //TODO if isset user set config callback 0:
-    //TODO reset all user controll callbacks
-    //TODO call all user set config callbacks
+	if (dev->cb_set_configuration) {
+		dev->cb_request = NULL;//TODO allow multiple
+		dev->cb_set_configuration(dev, req->wValue);//TODO allow multiple
+	}
+
 	return USB_RESULT_HANDLED;
 }
 
@@ -294,7 +292,6 @@ static uint8_t _usb_endpoint_stall_get(usb_device_t *dev, uint8_t addr)
 	(void) addr;
 	return 0;
 }
-
 
 static usb_result_t _usb_request_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
@@ -373,10 +370,9 @@ static usb_result_t _usb_request_endpoint(usb_device_t *dev, usb_request_t *req,
 	return USB_RESULT_NOTSUPP;
 }
 
-__attribute__((used))
+//TODO standard prefix
 usb_result_t _usb_request(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
-    /* FIXME: Have class/vendor requests as well. */
 	if ((req->bmRequestType & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_STANDARD) {
 		return USB_RESULT_NOTSUPP;
 	}
@@ -391,6 +387,32 @@ usb_result_t _usb_request(usb_device_t *dev, usb_request_t *req, uint8_t **buf, 
 	}
     
     return USB_RESULT_NOTSUPP;
+}
+
+
+static usb_result_t usb_control_request_dispatch(usb_device_t *dev, usb_request_t *req)
+{
+	uint8_t i;
+	usb_result_t result;
+
+	for (i = 0; i < USB_MAX_CB_CONTROL; i++) {
+		if (dev->cb_control[i].cb == NULL) {
+			break;
+		}
+		if ((req->bmRequestType & dev->cb_control[i].mask) == dev->cb_control[i].type) {
+			result = dev->cb_control[i].cb(
+				dev,
+				 req,
+				&(dev->ctrl_buf),
+				&(dev->ctrl_len)
+			);//TODO pass onComplete callback???
+			if (result == USB_RESULT_HANDLED || result == USB_RESULT_NOTSUPP) {
+				return result;
+			}
+		}
+	}
+
+	return _usb_request(dev, req, &(dev->ctrl_buf), &(dev->ctrl_len));
 }
 
 
