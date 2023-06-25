@@ -178,6 +178,11 @@ typedef struct usb_cb_control_s {
 typedef usb_result_t (*usb_cb_request_t)(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 typedef void (*usb_cb_set_configuration_t)(usb_device_t *dev, uint16_t wValue);
 
+typedef struct usb_control_s {
+	/* data */
+};
+
+
 typedef struct usb_device_s {
     const usb_device_descriptor_t *device_descr;
 	const usb_config_descriptor_t *config_descr;

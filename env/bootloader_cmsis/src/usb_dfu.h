@@ -17,6 +17,9 @@ extern "C" {
 #define DFU_ATTR_MANIFEST_TOLERANT 0x04
 #define DFU_ATTR_WILL_DETACH       0x08
 
+#define DFU_CMD_SET_ADDRESS 0x21
+#define DFU_CMD_ERASE       0x41
+
 typedef enum dfu_request_s {
 	DFU_REQUEST_DETACH,
 	DFU_REQUEST_DNLOAD,

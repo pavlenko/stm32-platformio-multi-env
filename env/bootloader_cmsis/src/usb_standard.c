@@ -392,7 +392,7 @@ usb_result_t _usb_request(usb_device_t *dev, usb_request_t *req, uint8_t **buf, 
     return USB_RESULT_NOTSUPP;
 }
 
-
+//TODO move to usb_control
 static usb_result_t usb_control_request_dispatch(usb_device_t *dev, usb_request_t *req)
 {
 	uint8_t i;
