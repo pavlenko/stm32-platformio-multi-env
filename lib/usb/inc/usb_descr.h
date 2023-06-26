@@ -157,6 +157,25 @@ typedef struct usb_string_descriptor_s {
 #define USB_FEATURE_DEVICE_REMOTE_WAKEUP 0x01
 #define USB_FEATURE_TEST_MODE            0x02
 
+/* USB Endpoint Descriptor bmAttributes bit definitions - Table 9-13 */
+/* bits 5..4 : usage type (only if ISOCHRONOUS) */
+#define USB_ENDPOINT_USAGE_TYPE_MASK     0x30
+#define USB_ENDPOINT_USAGE_TYPE_DATA     0x00
+#define USB_ENDPOINT_USAGE_TYPE_FEEDBACK 0x10
+#define USB_ENDPOINT_USAGE_TYPE_IMPLICIT 0x20
+/* bits 3..2 : Sync type (only if ISOCHRONOUS) */
+#define USB_ENDPOINT_SYNC_TYPE_MASK         0x0C
+#define USB_ENDPOINT_SYNC_TYPE_NOSYNCRONOUS 0x00
+#define USB_ENDPOINT_SYNC_TYPE_ASYNC        0x04
+#define USB_ENDPOINT_SYNC_TYPE_ADAPTIVE     0x08
+#define USB_ENDPOINT_SYNC_TYPE_SYNCRONOUS   0x0C
+/* bits 1..0 : transfer type */
+#define USB_ENDPOINT_TRANSFER_TYPE_MASK        0x03
+#define USB_ENDPOINT_TRANSFER_TYPE_CONTROL     0x00
+#define USB_ENDPOINT_TRANSFER_TYPE_ISOCHRONOUS 0x01
+#define USB_ENDPOINT_TRANSFER_TYPE_BULK        0x02
+#define USB_ENDPOINT_TRANSFER_TYPE_INTERRUPT   0x03
+
 /* 16-bit Language ID for 0 string descriptor */
 #define USB_LANGID_ENGLISH_US 0x0409
 

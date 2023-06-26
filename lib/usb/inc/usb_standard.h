@@ -13,30 +13,11 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 #include "usb_descr.h"
+#include "usbd.h"
 
 /* Exported types ------------------------------------------------------------*/
-typedef enum usb_result_e {
-	USB_RESULT_NOTSUPP = 0,
-	USB_RESULT_HANDLED = 1,
-	USB_RESULT_NEXT_CALLBACK = 2,
-} usb_result_t;
-
-typedef enum usb_state_e {
-    USB_STATE_IDLE,
-    USB_STATE_STALLED,
-    USB_STATE_DATA_IN,
-    USB_STATE_LAST_DATA_IN,
-    USB_STATE_DATA_OUT,
-    USB_STATE_LAST_DATA_OUT,
-    USB_STATE_STATUS_IN,
-    USB_STATE_STATUS_OUT,
-} usb_state_t;
 
 typedef struct usb_device_s usb_device_t;
-
-//TODO configurable
-#define USB_MAX_CB_CONTROL 4
-#define USB_MAX_CB_SET_CONFIGURATION 4
 
 // Callback types
 
