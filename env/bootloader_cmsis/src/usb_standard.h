@@ -234,10 +234,9 @@ typedef struct usb_device_s {
 } __attribute__((packed)) usb_device_t;
 
 /* Exported functions prototypes ---------------------------------------------*/
-usb_result_t _usb_request(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 
-__attribute__((weak))
-void _usb_reset_endpoints(usb_device_t *dev);
+// temporary export
+usb_result_t _usb_request(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 
 #ifdef __cplusplus
 }

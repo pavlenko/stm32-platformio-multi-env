@@ -1,4 +1,6 @@
 #include <stdint.h>
+
+#include "usb_control.h"
 #include "usb_standard.h"
 #include "usb_dfu.h"
 
@@ -233,6 +235,58 @@ void dfu_memory_write_uint16(uint32_t address, uint16_t data)
 int main(void) {
     usb_request_t req = {};
     while (1) {
-        _usb_request(&usb_device, &req, &usb_device.ctrl_buf, &usb_device.ctrl_len);
+        usb_control_request_dispatch(&usb_device, &req);
     }
+}
+
+void usb_ep_setup(usb_device_t *dev, uint8_t address, uint8_t type, uint16_t max_size, usb_cb_endpoint cb)
+{
+    (void) dev;
+    (void) address;
+    (void) type;
+    (void) max_size;
+    (void) cb;
+}
+
+void usb_ep_reset(usb_device_t *dev)
+{
+    (void) dev;
+}
+
+uint16_t usb_ep_read_packet(usb_device_t *dev, uint8_t address, const void *buf, uint16_t len)
+{
+    (void) dev;
+    (void) address;
+    (void) buf;
+    (void) len;
+    return 0;
+}
+
+void usb_ep_write_packet(usb_device_t *dev, uint8_t address, const void *buf, uint16_t len)
+{
+    (void) dev;
+    (void) address;
+    (void) buf;
+    (void) len;
+}
+
+void usb_ep_stall_set(usb_device_t *dev, uint8_t address, uint8_t stall)
+{
+    (void) dev;
+    (void) address;
+    (void) stall;
+}
+
+uint8_t usb_ep_stall_get(usb_device_t *dev, uint8_t address)
+{
+    (void) dev;
+    (void) address;
+    return 0;
+}
+
+void usb_ep_nak_set(usb_device_t *dev, uint8_t address, uint8_t nak)
+{
+    (void) dev;
+    (void) address;
+    (void) nak;
 }

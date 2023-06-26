@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#include "usb_standard.h"
+
 uint8_t dfu_get_status(dfu_t *dfu, uint32_t *bwPollTimeout)
 {
     switch (dfu->state) {

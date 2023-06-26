@@ -1,5 +1,7 @@
 #include "usb_standard.h"
 
+#include "usb_control.h"
+
 /* Private imports -----------------------------------------------------------*/
 #include <string.h>
 
@@ -210,7 +212,7 @@ static usb_result_t usb_set_configuration(usb_device_t *dev, usb_request_t *req,
 		}
 	}
 
-    _usb_reset_endpoints(dev);
+    usb_ep_reset(dev);
 
 	if (dev->cb_set_configuration) {
 		for (i = 0; i < USB_MAX_CB_CONTROL; i++) {
