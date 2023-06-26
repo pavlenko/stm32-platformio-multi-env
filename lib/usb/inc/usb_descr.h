@@ -157,6 +157,9 @@ typedef struct usb_string_descriptor_s {
 #define USB_FEATURE_DEVICE_REMOTE_WAKEUP 0x01
 #define USB_FEATURE_TEST_MODE            0x02
 
+/* 16-bit Language ID for 0 string descriptor */
+#define USB_LANGID_ENGLISH_US 0x0409
+
 /* Exported macro ------------------------------------------------------------*/
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions prototypes ---------------------------------------------*/
