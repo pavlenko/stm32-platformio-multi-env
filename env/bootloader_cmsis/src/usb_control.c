@@ -60,9 +60,10 @@ static usb_result_t usb_control_request_dispatch(usb_device_t *dev, usb_request_
 			result = dev->cb_control[i].cb(
 				dev,
 				 req,
-				&(dev->ctrl_buf),
-				&(dev->ctrl_len)
-			);//TODO pass onComplete callback???
+				&(dev->control.ctrl_buf),
+				&(dev->control.ctrl_len),
+				&(dev->control.complete_cb)
+			);
 			if (result == USB_RESULT_HANDLED || result == USB_RESULT_NOTSUPP) {
 				return result;
 			}

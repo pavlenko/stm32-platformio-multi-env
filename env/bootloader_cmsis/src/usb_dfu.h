@@ -73,6 +73,7 @@ typedef struct {
 } __attribute__((packed)) dfu_functional_descriptor_t;
 
 typedef struct {
+	dfu_functional_descriptor_t *descr;
 	dfu_state_t state;
 	uint8_t *buf;
     uint16_t len;
@@ -80,7 +81,14 @@ typedef struct {
     uint16_t block_num;
 } dfu_t;
 
-usb_result_t dfu_control_request(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+//TODO how to pass dfu instance???
+usb_result_t dfu_cb_control(
+    usb_device_t *dev,
+    usb_request_t *req,
+    uint8_t **buf,
+    uint16_t *len,
+    usb_cb_control_complete_t *cb
+);
 
 __attribute__((weak))
 void dfu_system_reset();

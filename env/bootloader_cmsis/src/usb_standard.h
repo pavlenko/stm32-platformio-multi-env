@@ -181,17 +181,24 @@ typedef struct usb_device_s usb_device_t;
 #define USB_MAX_CB_SET_CONFIGURATION 4
 
 // Callback types
-typedef struct usb_cb_control_s {
-	usb_result_t (*cb)(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-	uint8_t mask;
-	uint8_t type;
-} usb_cb_control_t;
 
-typedef usb_result_t (*usb_cb_request_t)(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 
-typedef void (*usb_cb_control_complete_t)(usb_device_t *dev, usb_request_t *req, void *arg);
 typedef void (*usb_cb_set_configuration_t)(usb_device_t *dev, uint16_t wValue);
 typedef void (*usb_cb_endpoint)(usb_device_t *dev, uint8_t ep);
+
+typedef void (*usb_cb_control_complete_t)(usb_device_t *dev, usb_request_t *req, void *ptr);
+typedef struct usb_cb_control_s {
+	usb_result_t (*cb)(//TODO create special type
+		usb_device_t *dev,
+		usb_request_t *req,
+		uint8_t **buf,
+		uint16_t *len,
+		void *ptr
+	);
+	uint8_t mask;
+	uint8_t type;
+	void *ptr;
+} usb_cb_control_t;
 
 typedef struct usb_control_s {
 	usb_state_t state;

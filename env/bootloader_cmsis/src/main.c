@@ -189,13 +189,24 @@ static const char *usb_strings[] = {
     "@Internal Flash   /0x08000000/8*001Ka,56*001Kg",
 };
 
+uint8_t usb_buffer[1024];
+uint8_t dfu_buffer[1024];
+
+//TODO create init function
+dfu_t dfu = {
+    .buf   = &dfu_buffer,
+    .state = DFU_STATE_DFU_IDLE,
+    .descr = &dfu_functional_descriptor,
+};
+
+//TODO create init function
 usb_device_t usb_device = {
     .device_descr = &usb_device_descriptor,
     .config_descr = &usb_config_descriptor,
     .strings = usb_strings,
     .num_strings = 4,
     .cb_control = {
-        {.cb = dfu_control_request},//TODO here we can pass pointer to some custom structure
+        {.cb = dfu_cb_control, .ptr = &dfu},
     },
 };
 
