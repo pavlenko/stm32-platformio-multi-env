@@ -9,70 +9,7 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 
-//TODO create c/h file template
-
-/* Private includes ----------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-/* Exported variables --------------------------------------------------------*/
-/* Exported functions prototypes ---------------------------------------------*/
-/* Private defines -----------------------------------------------------------*/
-
-/* USB Descriptor Types - Table 9-5 */
-#define USB_DESCRIPTOR_TYPE_DEVICE     0x01
-#define USB_DESCRIPTOR_TYPE_CONFIG     0x02
-#define USB_DESCRIPTOR_TYPE_STRING     0x03
-#define USB_DESCRIPTOR_TYPE_INTERFACE  0x04
-#define USB_DESCRIPTOR_TYPE_ENDPOINT   0x05
-//TODO missing
-
-// USB Descriptor fixed sizes
-#define USB_DESCRIPTOR_SIZE_DEVICE    0x12
-#define USB_DESCRIPTOR_SIZE_CONFIG    0x09
-#define USB_DESCRIPTOR_SIZE_INTERFACE 0x09
-#define USB_DESCRIPTOR_SIZE_ENDPOINT  0x07
-
-/* USB Configuration Descriptor bmAttributes bit definitions */
-#define USB_CONFIG_ATTR_DEFAULT       0x80 /* always required (USB2.0 table 9-10) */
-#define USB_CONFIG_ATTR_SELF_POWERED  0x40
-#define USB_CONFIG_ATTR_REMOTE_WAKEUP 0x20
-
-/* USB Standard Request Codes - Table 9-4 */
-#define USB_REQUEST_GET_STATUS        0x00
-#define USB_REQUEST_CLR_FEATURE       0x01
-#define USB_REQUEST_SET_FEATURE       0x03
-#define USB_REQUEST_SET_ADDRESS       0x05
-#define USB_REQUEST_GET_DESCRIPTOR    0x06
-#define USB_REQUEST_SET_DESCRIPTOR    0x07
-#define USB_REQUEST_GET_CONFIGURATION 0x08
-#define USB_REQUEST_SET_CONFIGURATION 0x09
-#define USB_REQUEST_GET_INTERFACE     0x0A
-#define USB_REQUEST_SET_INTERFACE     0x0B
-#define USB_REQUEST_SYNCH_FRAME       0x0C
-
-/* bmRequestType bit definitions */
-/* bit 7 : direction */
-#define USB_REQ_DIRECTION_MASK 0x80
-#define USB_REQ_DIRECTION_IN   0x80
-#define USB_REQ_DIRECTION_OUT  0x00
-/* bits 6..5 : type */
-#define USB_REQ_TYPE_MASK     0x60
-#define USB_REQ_TYPE_STANDARD 0x00
-#define USB_REQ_TYPE_CLASS    0x20
-#define USB_REQ_TYPE_VENDOR	  0x40
-/* bits 4..0 : recipient */
-#define USB_REQ_RECIPIENT_MASK      0x1F
-#define USB_REQ_RECIPIENT_DEVICE    0x00
-#define USB_REQ_RECIPIENT_INTERFACE 0x01
-#define USB_REQ_RECIPIENT_ENDPOINT  0x02
-#define USB_REQ_RECIPIENT_OTHER     0x03
-
-/* USB Standard Feature Selectors - Table 9-6 */
-#define USB_FEATURE_ENDPOINT_HALT        0x00
-#define USB_FEATURE_DEVICE_REMOTE_WAKEUP 0x01
-#define USB_FEATURE_TEST_MODE            0x02
-
 /* USB Setup Data structure - Table 9-2 */
 typedef struct usb_request_s {
 	uint8_t bmRequestType;
@@ -157,13 +94,73 @@ typedef struct usb_config_descriptor_s {
 	const usb_interface_t *interfaces;
 } __attribute__((packed)) usb_config_descriptor_t;
 
-// Table 9-15 specifies String Descriptor Zero.
-// Table 9-16 specified UNICODE String Descriptor.
+/* Table 9-15 specifies String Descriptor Zero. */
+/* Table 9-16 specified UNICODE String Descriptor. */
 typedef struct usb_string_descriptor_s {
 	uint8_t bLength;
 	uint8_t bDescriptorType;
 	uint16_t wData[];
 } __attribute__((packed)) usb_string_descriptor_t;
+
+/* Exported constants --------------------------------------------------------*/
+/* USB Descriptor Types - Table 9-5 */
+#define USB_DESCRIPTOR_TYPE_DEVICE     0x01
+#define USB_DESCRIPTOR_TYPE_CONFIG     0x02
+#define USB_DESCRIPTOR_TYPE_STRING     0x03
+#define USB_DESCRIPTOR_TYPE_INTERFACE  0x04
+#define USB_DESCRIPTOR_TYPE_ENDPOINT   0x05
+//TODO missing
+
+/* USB Descriptor fixed sizes */
+#define USB_DESCRIPTOR_SIZE_DEVICE    0x12
+#define USB_DESCRIPTOR_SIZE_CONFIG    0x09
+#define USB_DESCRIPTOR_SIZE_INTERFACE 0x09
+#define USB_DESCRIPTOR_SIZE_ENDPOINT  0x07
+
+/* USB Configuration Descriptor bmAttributes bit definitions */
+#define USB_CONFIG_ATTR_DEFAULT       0x80 /* always required (USB2.0 table 9-10) */
+#define USB_CONFIG_ATTR_SELF_POWERED  0x40
+#define USB_CONFIG_ATTR_REMOTE_WAKEUP 0x20
+
+/* USB Standard Request Codes - Table 9-4 */
+#define USB_REQUEST_GET_STATUS        0x00
+#define USB_REQUEST_CLR_FEATURE       0x01
+#define USB_REQUEST_SET_FEATURE       0x03
+#define USB_REQUEST_SET_ADDRESS       0x05
+#define USB_REQUEST_GET_DESCRIPTOR    0x06
+#define USB_REQUEST_SET_DESCRIPTOR    0x07
+#define USB_REQUEST_GET_CONFIGURATION 0x08
+#define USB_REQUEST_SET_CONFIGURATION 0x09
+#define USB_REQUEST_GET_INTERFACE     0x0A
+#define USB_REQUEST_SET_INTERFACE     0x0B
+#define USB_REQUEST_SYNCH_FRAME       0x0C
+
+/* bmRequestType bit definitions */
+/* bit 7 : direction */
+#define USB_REQ_DIRECTION_MASK 0x80
+#define USB_REQ_DIRECTION_IN   0x80
+#define USB_REQ_DIRECTION_OUT  0x00
+/* bits 6..5 : type */
+#define USB_REQ_TYPE_MASK     0x60
+#define USB_REQ_TYPE_STANDARD 0x00
+#define USB_REQ_TYPE_CLASS    0x20
+#define USB_REQ_TYPE_VENDOR	  0x40
+/* bits 4..0 : recipient */
+#define USB_REQ_RECIPIENT_MASK      0x1F
+#define USB_REQ_RECIPIENT_DEVICE    0x00
+#define USB_REQ_RECIPIENT_INTERFACE 0x01
+#define USB_REQ_RECIPIENT_ENDPOINT  0x02
+#define USB_REQ_RECIPIENT_OTHER     0x03
+
+/* USB Standard Feature Selectors - Table 9-6 */
+#define USB_FEATURE_ENDPOINT_HALT        0x00
+#define USB_FEATURE_DEVICE_REMOTE_WAKEUP 0x01
+#define USB_FEATURE_TEST_MODE            0x02
+
+/* Exported macro ------------------------------------------------------------*/
+/* Exported variables --------------------------------------------------------*/
+/* Exported functions prototypes ---------------------------------------------*/
+/* Private defines -----------------------------------------------------------*/
 
 #ifdef __cplusplus
 }
