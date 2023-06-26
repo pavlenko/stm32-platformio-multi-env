@@ -194,7 +194,7 @@ uint8_t dfu_buffer[1024];
 
 //TODO create init function
 dfu_t dfu = {
-    .buf   = &dfu_buffer,
+    .buf   = dfu_buffer,
     .state = DFU_STATE_DFU_IDLE,
     .descr = &dfu_functional_descriptor,
 };
@@ -231,11 +231,8 @@ void dfu_memory_write_uint16(uint32_t address, uint16_t data)
 }
 
 int main(void) {
-    uint8_t *buf = &buffer;
-    uint16_t len = 0;
-
     usb_request_t req = {};
     while (1) {
-        _usb_request(&usb_device, &req, &buf, &len);
+        _usb_request(&usb_device, &req, &usb_device.ctrl_buf, &usb_device.ctrl_len);
     }
 }

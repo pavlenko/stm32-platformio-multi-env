@@ -81,13 +81,13 @@ typedef struct {
     uint16_t block_num;
 } dfu_t;
 
-//TODO how to pass dfu instance???
 usb_result_t dfu_cb_control(
     usb_device_t *dev,
     usb_request_t *req,
     uint8_t **buf,
     uint16_t *len,
-    usb_cb_control_complete_t *cb
+    usb_cb_control_complete_t *cb,
+	void *ptr
 );
 
 __attribute__((weak))

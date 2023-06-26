@@ -187,14 +187,17 @@ typedef void (*usb_cb_set_configuration_t)(usb_device_t *dev, uint16_t wValue);
 typedef void (*usb_cb_endpoint)(usb_device_t *dev, uint8_t ep);
 
 typedef void (*usb_cb_control_complete_t)(usb_device_t *dev, usb_request_t *req, void *ptr);
+typedef usb_result_t (*usb_cb_control_cb_t)(
+	usb_device_t *dev,
+	usb_request_t *req,
+	uint8_t **buf,
+	uint16_t *len,
+	usb_cb_control_complete_t *complete_cb,
+	void *ptr
+);
+
 typedef struct usb_cb_control_s {
-	usb_result_t (*cb)(//TODO create special type
-		usb_device_t *dev,
-		usb_request_t *req,
-		uint8_t **buf,
-		uint16_t *len,
-		void *ptr
-	);
+	usb_cb_control_cb_t cb;
 	uint8_t mask;
 	uint8_t type;
 	void *ptr;
@@ -206,7 +209,7 @@ typedef struct usb_control_s {
 	uint8_t *ctrl_buf;
 	uint16_t ctrl_len;
 	usb_cb_control_complete_t complete_cb;
-	void *complete_arg;
+	void *complete_arg;//TODO are this needed???
 	bool needs_zlp;
 } usb_control_t;
 
