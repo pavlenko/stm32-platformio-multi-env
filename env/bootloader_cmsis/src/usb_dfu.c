@@ -19,12 +19,13 @@ uint8_t dfu_get_status(dfu_t *dfu, uint32_t *bwPollTimeout)
     }
 }
 
-static void dfu_cb_control_complete(usb_device_t *dev, usb_request_t *req, dfu_t *dfu)
+static void dfu_cb_control_complete(usb_device_t *dev, usb_request_t *req, void *ptr)
 {
 	(void) dev;
 	(void) req;
 
 	uint16_t i;
+    dfu_t *dfu = (dfu_t *) ptr;
 	switch (dfu->state) {
         case DFU_STATE_DFU_DNBUSY:
             dfu_memory_unlock();
