@@ -16,9 +16,12 @@ bool usb_register_cb_set_configuration(usb_device_t *dev, usb_cb_set_configurati
 {
     uint8_t i;
     for (i = 0; i < USB_MAX_CB_SET_CONFIGURATION; i++) {
-        // if (dev->cb_control[i].cb != NULL) {
-        //     continue;
-        // }
+        if (dev->cb_set_configuration[i] == cb) {
+            return true;
+        }
+        if (dev->cb_set_configuration[i] != NULL) {
+            continue;
+        }
         dev->cb_set_configuration[i] = cb;
         return true;
     }
@@ -26,9 +29,21 @@ bool usb_register_cb_set_configuration(usb_device_t *dev, usb_cb_set_configurati
 }
 
 bool usb_register_cb_set_interface(usb_device_t *dev, usb_cb_set_interface_t cb)
-{}
+{
+    //TODO
+    (void) dev;
+    (void) cb;
+    return true;
+}
 
 bool usb_register_cb_control(usb_device_t *dev, uint8_t type, uint8_t mask, usb_cb_control_t cb)
-{}
+{
+    //TODO
+    (void) dev;
+    (void) type;
+    (void) mask;
+    (void) cb;
+    return true;
+}
 
 /* Private functions ---------------------------------------------------------*/

@@ -10,6 +10,9 @@ extern "C" {
 #include <stdint.h>
 
 /* Private includes ----------------------------------------------------------*/
+//TODO do not include descriptors if not need
+#include "usb_descr.h"
+
 /* Exported types ------------------------------------------------------------*/
 
 /* Operation result types */
