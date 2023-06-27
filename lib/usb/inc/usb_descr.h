@@ -103,13 +103,42 @@ typedef struct usb_string_descriptor_s {
 } __attribute__((packed)) usb_string_descriptor_t;
 
 /* Exported constants --------------------------------------------------------*/
+
+/* USB Device classes by USB-IF, usage: both|device|interface */
+#define USB_CLASS_DEFINED_IN_INTERFACE 0x00 /* device */
+#define USB_CLASS_AUDIO                0x01 /* interface */
+#define USB_CLASS_COMMUNICATION        0x02 /* both */
+#define USB_CLASS_HUMAN_INTERFACE      0x03 /* interface */
+#define USB_CLASS_PHYSICAL             0x05 /* interface */
+#define USB_CLASS_IMAGE                0x06 /* interface */
+#define USB_CLASS_PRINTER              0x07 /* interface */
+#define USB_CLASS_MASS_STORAGE         0x08 /* interface */
+#define USB_CLASS_HUB                  0x09 /* device */
+#define USB_CLASS_CDC_DATA             0x0A /* interface */
+#define USB_CLASS_SMART_CARD           0x0B /* interface */
+#define USB_CLASS_CONTENT_SECURITY     0x0D /* interface */
+#define USB_CLASS_VIDEO                0x0E /* interface */
+#define USB_CLASS_PERSONAL_HEALTHCARE  0x0F /* interface */
+#define USB_CLASS_AUDIO_VIDEO_DEVICE   0x10 /* interface */
+#define USB_CLASS_BILLBOARD_DEVICE     0x11 /* device */
+#define USB_CLASS_DIAGNOSTIC_DEVICE    0xDC /* both */
+#define USB_CLASS_WIRELESS_CONTROLLER  0x0E /* interface */
+#define USB_CLASS_MISCELLANEOUS        0xEF /* both */
+#define USB_CLASS_APPLICATION_SPECIFIC 0xFE /* interface*/
+#define USB_CLASS_VENDOR_SPECIFIC      0xFF /* both */
+
 /* USB Descriptor Types - Table 9-5 */
-#define USB_DESCRIPTOR_TYPE_DEVICE     0x01
-#define USB_DESCRIPTOR_TYPE_CONFIG     0x02
-#define USB_DESCRIPTOR_TYPE_STRING     0x03
-#define USB_DESCRIPTOR_TYPE_INTERFACE  0x04
-#define USB_DESCRIPTOR_TYPE_ENDPOINT   0x05
-//TODO missing
+#define USB_DESCRIPTOR_TYPE_DEVICE             0x01
+#define USB_DESCRIPTOR_TYPE_CONFIG             0x02
+#define USB_DESCRIPTOR_TYPE_STRING             0x03
+#define USB_DESCRIPTOR_TYPE_INTERFACE          0x04
+#define USB_DESCRIPTOR_TYPE_ENDPOINT           0x05
+#define USB_DESCRIPTOR_TYPE_DEVICE_QUALIFIER   0x06
+#define USB_DESCRIPTOR_TYPE_OTHER_SPEED_CONFIG 0x07
+#define USB_DESCRIPTOR_TYPE_INTERFACE_POWER    0x08
+#define USB_DESCRIPTOR_TYPE_OTG                0x09
+#define USB_DESCRIPTOR_TYPE_DEBUG              0x0A
+#define USB_DESCRIPTOR_TYPE_INTERFACE_ASSOC    0x0B
 
 /* USB Descriptor fixed sizes */
 #define USB_DESCRIPTOR_SIZE_DEVICE    0x12

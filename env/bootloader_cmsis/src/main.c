@@ -84,9 +84,10 @@ usb_device_t usb_device = {
     .config_descr = &usb_config_descriptor,
     .strings = usb_strings,
     .num_strings = 4,
-    // .cb_control = {
-    //     {.cb = dfu_cb_control, .ptr = &dfu},
-    // },
+    .cb_control = {
+        //{.cb = dfu_cb_control, .ptr = &dfu},
+        dfu_cb_control,
+    },
 };
 
 void dfu_system_reset()
