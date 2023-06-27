@@ -17,9 +17,25 @@ static usb_result_t usb_get_status_endpoint(usb_device_t *dev, usb_request_t *re
 static usb_result_t usb_set_address(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 static usb_result_t usb_get_descriptor(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 // No need for: usb_set_descriptor()
+
+/**
+ * Get current selected configuration descriptor bConfigurationValue
+ */
 static usb_result_t usb_get_configuration(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+
+/**
+ * Set current selected configuration mathed bConfigurationValue configuration descriptors field
+ */
 static usb_result_t usb_set_configuration(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+
+/**
+ * Get current selected configuration interface(alternate setting)
+ */
 static usb_result_t usb_get_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+
+/**
+ * Set current selected configuration interface(alternate setting)
+ */
 static usb_result_t usb_set_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 
 static usb_result_t _usb_endpoint_stall(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
