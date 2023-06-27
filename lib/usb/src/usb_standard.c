@@ -1,6 +1,7 @@
 #include "usb_standard.h"
 
 #include "usb_control.h"
+#include "usb_private.h"
 
 /* Private imports -----------------------------------------------------------*/
 #include <string.h>
@@ -214,12 +215,14 @@ static usb_result_t usb_set_configuration(usb_device_t *dev, usb_request_t *req,
 
     usb_ep_reset(dev);
 
-	if (dev->cb_set_configuration) {
+	if (dev->cb_set_configuration[0]) {
 		for (i = 0; i < USB_MAX_CB_CONTROL; i++) {
-			dev->cb_control[i].cb = NULL;
+			//dev->cb_control[i].cb = NULL;
 		}
 		
-		dev->cb_set_configuration(dev, req->wValue);//TODO allow multiple
+		for (i = 0; i < USB_MAX_CB_SET_CONFIGURATION; i++) {
+			dev->cb_set_configuration[i](dev, req->wValue);
+		}
 	}
 
 	return USB_RESULT_HANDLED;

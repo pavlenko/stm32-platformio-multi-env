@@ -1,7 +1,6 @@
 #include <stdint.h>
 
-#include "usb_control.h"
-#include "usb_standard.h"
+#include "usbd.h"
 #include "usb_dfu.h"
 
 dfu_functional_descriptor_t dfu_functional_descriptor = {
@@ -85,9 +84,9 @@ usb_device_t usb_device = {
     .config_descr = &usb_config_descriptor,
     .strings = usb_strings,
     .num_strings = 4,
-    .cb_control = {
-        {.cb = dfu_cb_control, .ptr = &dfu},
-    },
+    // .cb_control = {
+    //     {.cb = dfu_cb_control, .ptr = &dfu},
+    // },
 };
 
 void dfu_system_reset()

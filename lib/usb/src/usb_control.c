@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#include "usb_private.h"
 #include "usb_standard.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
@@ -85,22 +86,23 @@ usb_result_t usb_control_request_dispatch(usb_device_t *dev, usb_request_t *req)
 	usb_result_t result;
 
 	for (i = 0; i < USB_MAX_CB_CONTROL; i++) {
-		if (dev->cb_control[i].cb == NULL) {
-			break;
-		}
-		if ((req->bmRequestType & dev->cb_control[i].mask) == dev->cb_control[i].type) {
-			result = dev->cb_control[i].cb(
-				dev,
-				 req,
-				&(dev->control.ctrl_buf),
-				&(dev->control.ctrl_len),
-				&(dev->control.complete_cb),
-				dev->cb_control[i].ptr
-			);
-			if (result == USB_RESULT_HANDLED || result == USB_RESULT_NOTSUPP) {
-				return result;
-			}
-		}
+		//TODO try do not use struct
+		// if (dev->cb_control[i].cb == NULL) {
+		// 	break;
+		// }
+		// if ((req->bmRequestType & dev->cb_control[i].mask) == dev->cb_control[i].type) {
+		// 	result = dev->cb_control[i].cb(
+		// 		dev,
+		// 		 req,
+		// 		&(dev->control.ctrl_buf),
+		// 		&(dev->control.ctrl_len),
+		// 		&(dev->control.complete_cb),
+		// 		dev->cb_control[i].ptr
+		// 	);
+		// 	if (result == USB_RESULT_HANDLED || result == USB_RESULT_NOTSUPP) {
+		// 		return result;
+		// 	}
+		// }
 	}
 
 	return _usb_request(dev, req, &(dev->ctrl_buf), &(dev->ctrl_len));
