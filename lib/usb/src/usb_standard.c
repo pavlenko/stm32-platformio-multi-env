@@ -17,25 +17,9 @@ static usb_result_t usb_get_status_endpoint(usb_device_t *dev, usb_request_t *re
 static usb_result_t usb_set_address(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 static usb_result_t usb_get_descriptor(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 // No need for: usb_set_descriptor()
-
-/**
- * Get current selected configuration descriptor bConfigurationValue
- */
 static usb_result_t usb_get_configuration(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-
-/**
- * Set current selected configuration mathed bConfigurationValue configuration descriptors field
- */
 static usb_result_t usb_set_configuration(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-
-/**
- * Get current selected configuration interface(alternate setting)
- */
 static usb_result_t usb_get_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-
-/**
- * Set current selected configuration interface(alternate setting)
- */
 static usb_result_t usb_set_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 
 static usb_result_t _usb_endpoint_stall(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
@@ -47,7 +31,8 @@ static usb_result_t _usb_request_interface(usb_device_t *dev, usb_request_t *req
 static usb_result_t _usb_request_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 
 
-/* Private function code -----------------------------------------------------*/
+/* Private functions ---------------------------------------------------------*/
+
 static usb_result_t usb_get_status_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     (void) dev;
@@ -113,6 +98,36 @@ static usb_result_t usb_set_address(usb_device_t *dev, usb_request_t *req, uint8
 	// }
 
 	return USB_RESULT_HANDLED;
+}
+
+static usb_result_t usb_get_descriptor_config(usb_device_t *dev, uint8_t descr_idx, uint8_t **buf, uint16_t *len)
+{
+	uint8_t i, j, k;
+
+	usb_config_descriptor_t *config_descr = dev->config_descr;//TODO multiple
+	uint16_t count = 0, total = 0, totallen = 0;
+
+	/* Copy configuration descriptor */
+	memcpy(buf, config_descr, count = MIN(len, config_descr->bLength));
+	buf += count;
+	len -= count;
+	total += count;
+	totallen += config_descr->bLength;
+
+	/* For each interface... */
+	for (i = 0; i < config_descr->bNumInterfaces; i++) {
+		/* Interface Association Descriptor, if any */
+		/* For each alternate setting... */
+		for (j = 0; j < config_descr->interfaces[i].num_altsetting; j++) {
+			/* Copy interface descriptor. */
+			/* Copy extra bytes (function descriptors), if any . */
+			/* For each endpoint... */
+			for (k = 0; k < iface->bNumEndpoints; k++) {
+				/* Copy endpoint descriptor */
+				/* Copy extra bytes (class specific). */
+			}
+		}
+	}
 }
 
 static usb_result_t usb_get_descriptor(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
