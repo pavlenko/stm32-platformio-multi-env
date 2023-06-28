@@ -64,19 +64,31 @@ typedef struct usb_interface_descriptor_s {
 	uint8_t iInterface;
 
 	/* Descriptor ends here.  The following are used internally: */
-	const usb_endpoint_descriptor_t *endpoint;
-	const void *extra_ptr;
+	const void *extra_ptr;//TODO here functional descriptors array, but can be different sizes per item
 	uint8_t extra_len;
+	const usb_endpoint_descriptor_t *endpoint;
 } __attribute__((packed)) usb_interface_descriptor_t;
+
+/* From ECN: Interface Association Descriptors, Table 9-Z */
+typedef struct usb_interface_assoc_descriptor_s {
+	uint8_t bLength;
+	uint8_t bDescriptorType;
+	uint8_t bFirstInterface;
+	uint8_t bInterfaceCount;
+	uint8_t bFunctionClass;
+	uint8_t bFunctionSubClass;
+	uint8_t bFunctionProtocol;
+	uint8_t iFunction;
+} __attribute__((packed)) usb_interface_assoc_descriptor_t;
 
 /* USB Standard Interface Descriptor container for altsettings */
 typedef struct usb_interface_s {
+	const usb_interface_assoc_descriptor_t *association;
 	const usb_interface_descriptor_t *altsettings;
 
 	/* Descriptor ends here.  The following are used internally: */
 	uint8_t *cur_altsetting;
 	uint8_t num_altsetting;
-	//TODO assoc descriptor???
 } usb_interface_t;
 
 /* USB Standard Configuration Descriptor - Table 9-10 */
@@ -141,10 +153,11 @@ typedef struct usb_string_descriptor_s {
 #define USB_DESCRIPTOR_TYPE_INTERFACE_ASSOC    0x0B
 
 /* USB Descriptor fixed sizes */
-#define USB_DESCRIPTOR_SIZE_DEVICE    0x12
-#define USB_DESCRIPTOR_SIZE_CONFIG    0x09
-#define USB_DESCRIPTOR_SIZE_INTERFACE 0x09
-#define USB_DESCRIPTOR_SIZE_ENDPOINT  0x07
+#define USB_DESCRIPTOR_SIZE_DEVICE          0x12
+#define USB_DESCRIPTOR_SIZE_CONFIG          0x09
+#define USB_DESCRIPTOR_SIZE_INTERFACE       0x09
+#define USB_DESCRIPTOR_SIZE_INTERFACE_ASSOC 0x08
+#define USB_DESCRIPTOR_SIZE_ENDPOINT        0x07
 
 /* USB Configuration Descriptor bmAttributes bit definitions */
 #define USB_CONFIG_ATTR_DEFAULT       0x80 /* always required (USB2.0 table 9-10) */

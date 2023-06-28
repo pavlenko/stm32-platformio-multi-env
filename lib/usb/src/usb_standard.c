@@ -102,32 +102,87 @@ static usb_result_t usb_set_address(usb_device_t *dev, usb_request_t *req, uint8
 
 static usb_result_t usb_get_descriptor_config(usb_device_t *dev, uint8_t descr_idx, uint8_t **buf, uint16_t *len)
 {
+	uint8_t *buf_ptr = *buf;
 	uint8_t i, j, k;
-
-	usb_config_descriptor_t *config_descr = dev->config_descr;//TODO multiple
-	uint16_t count = 0, total = 0, totallen = 0;
+	uint16_t count = 0, total = 0, wTotalLength = 0;
 
 	/* Copy configuration descriptor */
-	memcpy(buf, config_descr, count = MIN(len, config_descr->bLength));
-	buf += count;
-	len -= count;
+	const usb_config_descriptor_t *config = dev->config_descr;
+	count = (uint16_t) MIN(*len, config->bLength);
+
+	memcpy(*buf, config, count);
+	*buf += count;
+	*len -= count;
 	total += count;
-	totallen += config_descr->bLength;
+	wTotalLength += config->bLength;
 
 	/* For each interface... */
-	for (i = 0; i < config_descr->bNumInterfaces; i++) {
+	for (i = 0; i < config->bNumInterfaces; i++) {
 		/* Interface Association Descriptor, if any */
+		if (config->interfaces[i].association) {
+			const usb_interface_assoc_descriptor_t *assoc = config->interfaces[i].association;
+			count = (uint16_t) MIN(*len, assoc->bLength);
+			
+			memcpy(*buf, assoc, count);
+			*buf += count;
+			*len -= count;
+			total += count;
+			wTotalLength += assoc->bLength;
+		}
+
 		/* For each alternate setting... */
-		for (j = 0; j < config_descr->interfaces[i].num_altsetting; j++) {
+		for (j = 0; j < config->interfaces[i].num_altsetting; j++) {
 			/* Copy interface descriptor. */
+			const usb_interface_descriptor_t *interface = &config->interfaces[i].altsettings[j];
+			count = (uint16_t) MIN(*len, interface->bLength);
+
+			memcpy(*buf, interface, count);
+			*buf += count;
+			*len -= count;
+			total += count;
+			wTotalLength += interface->bLength;
+
 			/* Copy extra bytes (function descriptors), if any . */
+			if (interface->extra_ptr) {
+				count = (uint16_t) MIN(*len, interface->extra_len);
+
+				memcpy(*buf, interface->extra_ptr, count);
+				*buf += count;
+				*len -= count;
+				total += count;
+				wTotalLength += interface->extra_len;
+			}
+
 			/* For each endpoint... */
-			for (k = 0; k < iface->bNumEndpoints; k++) {
+			for (k = 0; k < interface->bNumEndpoints; k++) {
 				/* Copy endpoint descriptor */
+				const usb_endpoint_descriptor_t *endpoint = &interface->endpoint[k];
+				count = (uint16_t) MIN(*len, endpoint->bLength);
+
+				memcpy(*buf, endpoint, count);
+				*buf += count;
+				*len -= count;
+				total += count;
+				wTotalLength += endpoint->bLength;
+
 				/* Copy extra bytes (class specific). */
+				if (endpoint->extra_ptr) {
+					count = (uint16_t) MIN(*len, endpoint->extra_len);
+
+					memcpy(*buf, endpoint->extra_ptr, count);
+					*buf += count;
+					*len -= count;
+					total += count;
+					wTotalLength += endpoint->extra_len;
+				}
 			}
 		}
 	}
+
+	memcpy(buf_ptr + 2, &wTotalLength, sizeof(uint16_t));
+	*len = total;
+
+	return USB_RESULT_HANDLED;
 }
 
 static usb_result_t usb_get_descriptor(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
@@ -143,9 +198,7 @@ static usb_result_t usb_get_descriptor(usb_device_t *dev, usb_request_t *req, ui
 			*len = MIN(*len, dev->device_descr->bLength);
 			return USB_RESULT_HANDLED;
 		case USB_DESCRIPTOR_TYPE_CONFIG:
-			//*buf = usbd_dev->ctrl_buf;//TODO
-			//*len = build_config_descriptor(usbd_dev, descr_idx, *buf, *len);//TODO
-			return USB_RESULT_HANDLED;
+			return usb_get_descriptor_config(dev, descr_idx, buf, len);
 		case USB_DESCRIPTOR_TYPE_STRING:
 			sd = (usb_string_descriptor_t *) dev->ctrl_buf;
 

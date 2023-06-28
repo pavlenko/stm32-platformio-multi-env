@@ -1,5 +1,5 @@
-#ifndef __USB_DFU_H
-#define __USB_DFU_H
+#ifndef __USB_DFU_H__
+#define __USB_DFU_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -8,9 +8,9 @@ extern "C" {
 #include "stdint.h"
 #include "usb_standard.h"
 
-#define USB_CLASS_DFU 0xFE
+#define USB_CLASS_DFU 0xFE //TODO use USB_CLASS_APPLICATION_SPECIFIC
 
-#define DFU_DESCRIPTOR_TYPE_FUNCTIONAL 0x21
+#define DFU_DESCRIPTOR_TYPE_FUNCTIONAL 0x21 //TODO what is it
 
 #define DFU_ATTR_CAN_DOWNLOAD      0x01
 #define DFU_ATTR_CAN_UPLOAD        0x02
@@ -109,4 +109,4 @@ void dfu_memory_write_uint16(uint32_t address, uint16_t data);
 }
 #endif
 
-#endif //__USB_DFU_H
+#endif // __USB_DFU_H__
