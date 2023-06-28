@@ -15,8 +15,8 @@
 #define APP_ADDRESS (FLASH_BASE + DFU_SIZE)
 
 /* Commands sent with wBlockNum == 0 as per ST implementation. */
-#define CMD_SETADDR	0x21
-#define CMD_ERASE	0x41
+#define CMD_SETADDR    0x21
+#define CMD_ERASE    0x41
 
 /* We need a special large control buffer for this device: */
 uint8_t usbd_control_buffer[DFU_TRANSFER_SIZE];

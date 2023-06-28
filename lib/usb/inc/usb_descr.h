@@ -12,106 +12,106 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USB Setup Data structure - Table 9-2 */
 typedef struct usb_request_s {
-	uint8_t bmRequestType;
-	uint8_t bRequest;
-	uint16_t wValue;
-	uint16_t wIndex;
-	uint16_t wLength;
+    uint8_t bmRequestType;
+    uint8_t bRequest;
+    uint16_t wValue;
+    uint16_t wIndex;
+    uint16_t wLength;
 } __attribute__((packed)) usb_request_t;
 
 /* USB Standard Device Descriptor - Table 9-8 */
 typedef struct usb_device_descriptor_s {
-	uint8_t bLength;
-	uint8_t bDescriptorType;
-	uint16_t bcdUSB;
-	uint8_t bDeviceClass;
-	uint8_t bDeviceSubClass;
-	uint8_t bDeviceProtocol;
-	uint8_t bMaxPacketSize0;
-	uint16_t idVendor;
-	uint16_t idProduct;
-	uint16_t bcdDevice;
-	uint8_t iManufacturer;
-	uint8_t iProduct;
-	uint8_t iSerialNumber;
-	uint8_t bNumConfigurations;
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint16_t bcdUSB;
+    uint8_t bDeviceClass;
+    uint8_t bDeviceSubClass;
+    uint8_t bDeviceProtocol;
+    uint8_t bMaxPacketSize0;
+    uint16_t idVendor;
+    uint16_t idProduct;
+    uint16_t bcdDevice;
+    uint8_t iManufacturer;
+    uint8_t iProduct;
+    uint8_t iSerialNumber;
+    uint8_t bNumConfigurations;
 } __attribute__((packed)) usb_device_descriptor_t;
 
 /* USB Standard Endpoint Descriptor - Table 9-13 */
 typedef struct usb_endpoint_descriptor_s {
-	uint8_t bLength;
-	uint8_t bDescriptorType;
-	uint8_t bEndpointAddress;
-	uint8_t bmAttributes;
-	uint16_t wMaxPacketSize;
-	uint8_t bInterval;
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t bEndpointAddress;
+    uint8_t bmAttributes;
+    uint16_t wMaxPacketSize;
+    uint8_t bInterval;
 
-	/* Descriptor ends here.  The following are used internally: */
-	const void *extra_ptr;
-	uint8_t extra_len;
+    /* Descriptor ends here.  The following are used internally: */
+    const void *extra_ptr;
+    uint8_t extra_len;
 } __attribute__((packed)) usb_endpoint_descriptor_t;
 
 /* USB Standard Interface Descriptor - Table 9-12 */
 typedef struct usb_interface_descriptor_s {
-	uint8_t bLength;
-	uint8_t bDescriptorType;
-	uint8_t bInterfaceNumber;
-	uint8_t bAlternateSetting;
-	uint8_t bNumEndpoints;
-	uint8_t bInterfaceClass;
-	uint8_t bInterfaceSubClass;
-	uint8_t bInterfaceProtocol;
-	uint8_t iInterface;
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t bInterfaceNumber;
+    uint8_t bAlternateSetting;
+    uint8_t bNumEndpoints;
+    uint8_t bInterfaceClass;
+    uint8_t bInterfaceSubClass;
+    uint8_t bInterfaceProtocol;
+    uint8_t iInterface;
 
-	/* Descriptor ends here.  The following are used internally: */
-	const void *extra_ptr;//TODO here functional descriptors array, but can be different sizes per item
-	uint8_t extra_len;
-	const usb_endpoint_descriptor_t *endpoint;
+    /* Descriptor ends here.  The following are used internally: */
+    const void *extra_ptr;//TODO here functional descriptors array, but can be different sizes per item
+    uint8_t extra_len;
+    const usb_endpoint_descriptor_t *endpoint;
 } __attribute__((packed)) usb_interface_descriptor_t;
 
 /* From ECN: Interface Association Descriptors, Table 9-Z */
 typedef struct usb_interface_assoc_descriptor_s {
-	uint8_t bLength;
-	uint8_t bDescriptorType;
-	uint8_t bFirstInterface;
-	uint8_t bInterfaceCount;
-	uint8_t bFunctionClass;
-	uint8_t bFunctionSubClass;
-	uint8_t bFunctionProtocol;
-	uint8_t iFunction;
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t bFirstInterface;
+    uint8_t bInterfaceCount;
+    uint8_t bFunctionClass;
+    uint8_t bFunctionSubClass;
+    uint8_t bFunctionProtocol;
+    uint8_t iFunction;
 } __attribute__((packed)) usb_interface_assoc_descriptor_t;
 
 /* USB Standard Interface Descriptor container for altsettings */
 typedef struct usb_interface_s {
-	const usb_interface_assoc_descriptor_t *association;
-	const usb_interface_descriptor_t *altsettings;
+    const usb_interface_assoc_descriptor_t *association;
+    const usb_interface_descriptor_t *altsettings;
 
-	/* Descriptor ends here.  The following are used internally: */
-	uint8_t *cur_altsetting;
-	uint8_t num_altsetting;
+    /* Descriptor ends here.  The following are used internally: */
+    uint8_t *cur_altsetting;
+    uint8_t num_altsetting;
 } usb_interface_t;
 
 /* USB Standard Configuration Descriptor - Table 9-10 */
 typedef struct usb_config_descriptor_s {
-	uint8_t bLength;
-	uint8_t bDescriptorType;
-	uint16_t wTotalLength;
-	uint8_t bNumInterfaces;
-	uint8_t bConfigurationValue;
-	uint8_t iConfiguration;
-	uint8_t bmAttributes;
-	uint8_t bMaxPower;
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint16_t wTotalLength;
+    uint8_t bNumInterfaces;
+    uint8_t bConfigurationValue;
+    uint8_t iConfiguration;
+    uint8_t bmAttributes;
+    uint8_t bMaxPower;
 
-	/* Descriptor ends here.  The following are used internally: */
-	const usb_interface_t *interfaces;
+    /* Descriptor ends here.  The following are used internally: */
+    const usb_interface_t *interfaces;
 } __attribute__((packed)) usb_config_descriptor_t;
 
 /* Table 9-15 specifies String Descriptor Zero. */
 /* Table 9-16 specified UNICODE String Descriptor. */
 typedef struct usb_string_descriptor_s {
-	uint8_t bLength;
-	uint8_t bDescriptorType;
-	uint16_t wData[];
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint16_t wData[];
 } __attribute__((packed)) usb_string_descriptor_t;
 
 /* Exported constants --------------------------------------------------------*/
@@ -186,7 +186,7 @@ typedef struct usb_string_descriptor_s {
 #define USB_REQ_TYPE_MASK     0x60
 #define USB_REQ_TYPE_STANDARD 0x00
 #define USB_REQ_TYPE_CLASS    0x20
-#define USB_REQ_TYPE_VENDOR	  0x40
+#define USB_REQ_TYPE_VENDOR      0x40
 /* bits 4..0 : recipient */
 #define USB_REQ_RECIPIENT_MASK      0x1F
 #define USB_REQ_RECIPIENT_DEVICE    0x00

@@ -21,46 +21,46 @@ extern "C" {
 #define DFU_CMD_ERASE       0x41
 
 typedef enum dfu_request_s {
-	DFU_REQUEST_DETACH,
-	DFU_REQUEST_DNLOAD,
-	DFU_REQUEST_UPLOAD,
-	DFU_REQUEST_GET_STATUS,
-	DFU_REQUEST_CLR_STATUS,
-	DFU_REQUEST_GET_STATE,
-	DFU_REQUEST_ABORT,
+    DFU_REQUEST_DETACH,
+    DFU_REQUEST_DNLOAD,
+    DFU_REQUEST_UPLOAD,
+    DFU_REQUEST_GET_STATUS,
+    DFU_REQUEST_CLR_STATUS,
+    DFU_REQUEST_GET_STATE,
+    DFU_REQUEST_ABORT,
 } dfu_request_t;
 
 typedef enum dfu_status_e {
-	DFU_STATUS_OK,
-	DFU_STATUS_ERR_TARGET,
-	DFU_STATUS_ERR_FILE,
-	DFU_STATUS_ERR_WRITE,
-	DFU_STATUS_ERR_ERASE,
-	DFU_STATUS_ERR_CHECK_ERASED,
-	DFU_STATUS_ERR_PROG,
-	DFU_STATUS_ERR_VERIFY,
-	DFU_STATUS_ERR_ADDRESS,
-	DFU_STATUS_ERR_NOTDONE,
-	DFU_STATUS_ERR_FIRMWARE,
-	DFU_STATUS_ERR_VENDOR,
-	DFU_STATUS_ERR_USBR,
-	DFU_STATUS_ERR_POR,
-	DFU_STATUS_ERR_UNKNOWN,
-	DFU_STATUS_ERR_STALLEDPKT,
+    DFU_STATUS_OK,
+    DFU_STATUS_ERR_TARGET,
+    DFU_STATUS_ERR_FILE,
+    DFU_STATUS_ERR_WRITE,
+    DFU_STATUS_ERR_ERASE,
+    DFU_STATUS_ERR_CHECK_ERASED,
+    DFU_STATUS_ERR_PROG,
+    DFU_STATUS_ERR_VERIFY,
+    DFU_STATUS_ERR_ADDRESS,
+    DFU_STATUS_ERR_NOTDONE,
+    DFU_STATUS_ERR_FIRMWARE,
+    DFU_STATUS_ERR_VENDOR,
+    DFU_STATUS_ERR_USBR,
+    DFU_STATUS_ERR_POR,
+    DFU_STATUS_ERR_UNKNOWN,
+    DFU_STATUS_ERR_STALLEDPKT,
 } dfu_status_t;
 
 typedef enum dfu_state_e {
-	DFU_STATE_APP_IDLE,
-	DFU_STATE_APP_DETACH,
-	DFU_STATE_DFU_IDLE,
-	DFU_STATE_DFU_DNLOAD_SYNC,
-	DFU_STATE_DFU_DNBUSY,
-	DFU_STATE_DFU_DNLOAD_IDLE,
-	DFU_STATE_DFU_MANIFEST_SYNC,
-	DFU_STATE_DFU_MANIFEST,
-	DFU_STATE_DFU_MANIFEST_WAIT_RESET,
-	DFU_STATE_DFU_UPLOAD_IDLE,
-	DFU_STATE_DFU_ERROR,
+    DFU_STATE_APP_IDLE,
+    DFU_STATE_APP_DETACH,
+    DFU_STATE_DFU_IDLE,
+    DFU_STATE_DFU_DNLOAD_SYNC,
+    DFU_STATE_DFU_DNBUSY,
+    DFU_STATE_DFU_DNLOAD_IDLE,
+    DFU_STATE_DFU_MANIFEST_SYNC,
+    DFU_STATE_DFU_MANIFEST,
+    DFU_STATE_DFU_MANIFEST_WAIT_RESET,
+    DFU_STATE_DFU_UPLOAD_IDLE,
+    DFU_STATE_DFU_ERROR,
 } dfu_state_t;
 
 typedef struct {
@@ -73,9 +73,9 @@ typedef struct {
 } __attribute__((packed)) dfu_functional_descriptor_t;
 
 typedef struct {
-	dfu_functional_descriptor_t *descr;
-	dfu_state_t state;
-	uint8_t *buf;
+    dfu_functional_descriptor_t *descr;
+    dfu_state_t state;
+    uint8_t *buf;
     uint16_t len;
     uint32_t address;
     uint16_t block_num;
@@ -87,7 +87,7 @@ usb_result_t dfu_cb_control(
     uint8_t **buf,
     uint16_t *len,
     usb_cb_control_complete_t *cb,
-	void *ptr
+    void *ptr
 );
 
 __attribute__((weak))

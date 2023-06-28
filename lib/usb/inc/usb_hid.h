@@ -14,15 +14,15 @@ extern "C" {
 
 //TODO how to define report descriptors
 typedef struct hid_functional_descriptor_s {
-	uint8_t bLength;
-	uint8_t bDescriptorType;
-	uint16_t bcdHID;
-	uint8_t bCountryCode;
-	uint8_t bNumDescriptors;
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint16_t bcdHID;
+    uint8_t bCountryCode;
+    uint8_t bNumDescriptors;
 
     /* Descriptor ends here.  The following are used internally: */
-	const void *extra_ptr;
-	uint8_t extra_len;
+    const void *extra_ptr;
+    uint8_t extra_len;
 } __attribute__((packed)) hid_functional_descriptor_t;
 
 /* Exported constants --------------------------------------------------------*/
