@@ -9,22 +9,18 @@
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
 /* Private function prototypes -----------------------------------------------*/
-static usb_result_t usb_get_status_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t usb_get_status_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t usb_get_status_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-// No need for: usb_clr_feature()
-// No need for: usb_set_feature()
-static usb_result_t usb_set_address(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t usb_get_descriptor(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+static usb_result_t usb_standard_get_status_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+static usb_result_t usb_standard_get_status_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+static usb_result_t usb_standard_get_status_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+// No need for: usb_standard_clr_feature()
+// No need for: usb_standard_set_feature()
+static usb_result_t usb_standard_set_address(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+static usb_result_t usb_standard_get_descriptor(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 // No need for: usb_set_descriptor()
 static usb_result_t usb_get_configuration(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 static usb_result_t usb_set_configuration(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 static usb_result_t usb_get_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 static usb_result_t usb_set_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-
-static usb_result_t _usb_endpoint_stall(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t _usb_endpoint_unstall(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static uint8_t _usb_endpoint_stall_get(usb_device_t *dev, uint8_t addr);
 
 static usb_result_t _usb_request_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 static usb_result_t _usb_request_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
@@ -33,7 +29,7 @@ static usb_result_t _usb_request_endpoint(usb_device_t *dev, usb_request_t *req,
 
 /* Private functions ---------------------------------------------------------*/
 
-static usb_result_t usb_get_status_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+static usb_result_t usb_standard_get_status_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     (void) dev;
     (void) req;
@@ -49,7 +45,7 @@ static usb_result_t usb_get_status_device(usb_device_t *dev, usb_request_t *req,
     return USB_RESULT_HANDLED;
 }
 
-static usb_result_t usb_get_status_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+static usb_result_t usb_standard_get_status_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     (void) dev;
     (void) req;
@@ -63,20 +59,20 @@ static usb_result_t usb_get_status_interface(usb_device_t *dev, usb_request_t *r
     return USB_RESULT_HANDLED;
 }
 
-static usb_result_t usb_get_status_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+static usb_result_t usb_standard_get_status_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     (void) req;
 
     if (*len > 2) {
         *len = 2;
     }
-    (*buf)[0] = _usb_endpoint_stall_get(dev, req->wIndex) ? 1 : 0;//TODO check
+    (*buf)[0] = usb_ep_stall_get(dev, req->wIndex) ? 1 : 0;
     (*buf)[1] = 0;
 
     return USB_RESULT_HANDLED;
 }
 
-static usb_result_t usb_set_address(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+static usb_result_t usb_standard_set_address(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     (void) req;
     (void) buf;
@@ -185,7 +181,7 @@ static usb_result_t usb_get_descriptor_config(usb_device_t *dev, uint8_t descr_i
     return USB_RESULT_HANDLED;
 }
 
-static usb_result_t usb_get_descriptor(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+static usb_result_t usb_standard_get_descriptor(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     int i, array_idx, descr_idx;
     usb_string_descriptor_t *sd;
@@ -360,31 +356,6 @@ static usb_result_t usb_set_interface(usb_device_t *dev, usb_request_t *req, uin
     return USB_RESULT_HANDLED;
 }
 
-static usb_result_t _usb_endpoint_stall(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
-{
-    (void) dev;
-    (void) req;
-    (void) buf;
-    (void) len;
-    return USB_RESULT_HANDLED;
-}
-
-static usb_result_t _usb_endpoint_unstall(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
-{
-    (void) dev;
-    (void) req;
-    (void) buf;
-    (void) len;
-    return USB_RESULT_HANDLED;
-}
-
-static uint8_t _usb_endpoint_stall_get(usb_device_t *dev, uint8_t addr)
-{
-    (void) dev;
-    (void) addr;
-    return 0;
-}
-
 static usb_result_t _usb_request_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     switch (req->bRequest) {
@@ -393,7 +364,7 @@ static usb_result_t _usb_request_device(usb_device_t *dev, usb_request_t *req, u
             * GET_STATUS always responds with zero reply.
             * The application may override this behaviour.
             */
-            return usb_get_status_device(dev, req, buf, len);
+            return usb_standard_get_status_device(dev, req, buf, len);
         case USB_REQUEST_CLR_FEATURE:
         case USB_REQUEST_SET_FEATURE:
             // Not implemented, just known
@@ -403,9 +374,9 @@ static usb_result_t _usb_request_device(usb_device_t *dev, usb_request_t *req, u
             * SET ADDRESS is an exception.
             * It is only processed at STATUS stage.
             */
-            return usb_set_address(dev, req, buf, len);
+            return usb_standard_set_address(dev, req, buf, len);
         case USB_REQUEST_GET_DESCRIPTOR:
-            return usb_get_descriptor(dev, req, buf, len);
+            return usb_standard_get_descriptor(dev, req, buf, len);
         case USB_REQUEST_SET_DESCRIPTOR:
             /* SET_DESCRIPTOR is optional and not implemented. */
             break;
@@ -431,7 +402,7 @@ static usb_result_t _usb_request_interface(usb_device_t *dev, usb_request_t *req
         case USB_REQUEST_SET_INTERFACE:
             return usb_set_interface(dev, req, buf, len);
         case USB_REQUEST_GET_STATUS:
-            return usb_get_status_interface(dev, req, buf, len);
+            return usb_standard_get_status_interface(dev, req, buf, len);
     }
 
     return USB_RESULT_NOTSUPP;
@@ -442,14 +413,16 @@ static usb_result_t _usb_request_endpoint(usb_device_t *dev, usb_request_t *req,
     switch (req->bRequest) {
         case USB_REQUEST_CLR_FEATURE:
             if (req->wValue == USB_FEATURE_ENDPOINT_HALT) {
-                return _usb_endpoint_unstall(dev, req, buf, len);
+                usb_ep_stall_set(dev, req->wIndex, 0);
+                return USB_RESULT_HANDLED;
             }
         case USB_REQUEST_SET_FEATURE:
             if (req->wValue == USB_FEATURE_ENDPOINT_HALT) {
-                return _usb_endpoint_stall(dev, req, buf, len);
+                usb_ep_stall_set(dev, req->wIndex, 1);
+                return USB_RESULT_HANDLED;
             }
         case USB_REQUEST_GET_STATUS:
-            return usb_get_status_endpoint(dev, req, buf, len);
+            return usb_standard_get_status_endpoint(dev, req, buf, len);
         case USB_REQUEST_SYNCH_FRAME:
             /* FIXME: SYNCH_FRAME is not implemented. */
             /*
