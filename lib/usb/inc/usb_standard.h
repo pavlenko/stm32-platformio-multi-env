@@ -42,7 +42,7 @@ extern "C" {
 /* Exported functions prototypes ---------------------------------------------*/
 
 // temporary export
-usb_result_t usb_standard_request_dispatch(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+usb_result_t _usb_standard_request(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 
 #ifdef __cplusplus
 }

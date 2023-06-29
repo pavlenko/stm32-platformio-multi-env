@@ -105,7 +105,7 @@ usb_result_t usb_control_request_dispatch(usb_device_t *dev, usb_request_t *req)
         // }
     // }
 
-    return usb_standard_request_dispatch(dev, req, &(dev->ctrl_buf), &(dev->ctrl_len));
+    return _usb_standard_request(dev, req, &(dev->ctrl_buf), &(dev->ctrl_len));
 }
 
 static void usb_control_setup_rd(usb_device_t *dev, usb_request_t *req)

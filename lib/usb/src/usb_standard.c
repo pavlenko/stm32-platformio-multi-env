@@ -3,12 +3,15 @@
 #include "usb_control.h"
 #include "usb_private.h"
 
-/* Private imports -----------------------------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
 #include <string.h>
 
-#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
-
+/* Private typedef -----------------------------------------------------------*/
+/* Private define ------------------------------------------------------------*/
+/* Private macro -------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
+
 static usb_result_t usb_standard_get_status_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 static usb_result_t usb_standard_get_status_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 static usb_result_t usb_standard_get_status_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
@@ -22,12 +25,12 @@ static usb_result_t usb_standard_set_configuration(usb_device_t *dev, usb_reques
 static usb_result_t usb_stadard_get_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 static usb_result_t usb_stadard_set_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 
-static usb_result_t _usb_request_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t _usb_request_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t _usb_request_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+static usb_result_t _usb_standard_request_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+static usb_result_t _usb_standard_request_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
+static usb_result_t _usb_standard_request_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 
-
-/* Private functions ---------------------------------------------------------*/
+/* Extern function prototypes ------------------------------------------------*/
+/* Function definitions ------------------------------------------------------*/
 
 static usb_result_t usb_standard_get_status_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
@@ -344,7 +347,7 @@ static usb_result_t usb_stadard_set_interface(usb_device_t *dev, usb_request_t *
     return USB_RESULT_HANDLED;
 }
 
-static usb_result_t _usb_request_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+static usb_result_t _usb_standard_request_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     switch (req->bRequest) {
         case USB_REQUEST_GET_STATUS:
@@ -378,7 +381,7 @@ static usb_result_t _usb_request_device(usb_device_t *dev, usb_request_t *req, u
     return USB_RESULT_NOTSUPP;
 }
 
-static usb_result_t _usb_request_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+static usb_result_t _usb_standard_request_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     switch (req->bRequest) {
         case USB_REQUEST_CLR_FEATURE:
@@ -396,7 +399,7 @@ static usb_result_t _usb_request_interface(usb_device_t *dev, usb_request_t *req
     return USB_RESULT_NOTSUPP;
 }
 
-static usb_result_t _usb_request_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+static usb_result_t _usb_standard_request_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     switch (req->bRequest) {
         case USB_REQUEST_CLR_FEATURE:
@@ -423,7 +426,7 @@ static usb_result_t _usb_request_endpoint(usb_device_t *dev, usb_request_t *req,
     return USB_RESULT_NOTSUPP;
 }
 
-usb_result_t usb_standard_request_dispatch(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+usb_result_t _usb_standard_request(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     if ((req->bmRequestType & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_STANDARD) {
         return USB_RESULT_NOTSUPP;
@@ -431,11 +434,11 @@ usb_result_t usb_standard_request_dispatch(usb_device_t *dev, usb_request_t *req
 
     switch (req->bmRequestType & USB_REQ_RECIPIENT_MASK) {
         case USB_REQ_RECIPIENT_DEVICE:
-            return _usb_request_device(dev, req, buf, len);
+            return _usb_standard_request_device(dev, req, buf, len);
         case USB_REQ_RECIPIENT_INTERFACE:
-            return _usb_request_interface(dev, req, buf, len);
+            return _usb_standard_request_interface(dev, req, buf, len);
         case USB_REQ_RECIPIENT_ENDPOINT:
-            return _usb_request_endpoint(dev, req, buf, len);
+            return _usb_standard_request_endpoint(dev, req, buf, len);
     }
     
     return USB_RESULT_NOTSUPP;

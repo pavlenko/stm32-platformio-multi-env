@@ -16,8 +16,22 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
+
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
+
+/**
+ * Dispatch standard device reuests
+ * 
+ * @param dev 
+ * @param req 
+ * @param buf 
+ * @param len 
+ * @return usb_result_t 
+ */
+usb_result_t _usb_standard_request(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 
 #ifdef __cplusplus
 }
