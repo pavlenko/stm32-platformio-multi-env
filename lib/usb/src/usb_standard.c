@@ -25,10 +25,6 @@ static usb_result_t usb_standard_set_configuration(usb_device_t *dev, usb_reques
 static usb_result_t usb_stadard_get_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 static usb_result_t usb_stadard_set_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
 
-static usb_result_t _usb_standard_request_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t _usb_standard_request_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t _usb_standard_request_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-
 /* Extern function prototypes ------------------------------------------------*/
 /* Function definitions ------------------------------------------------------*/
 
@@ -347,7 +343,7 @@ static usb_result_t usb_stadard_set_interface(usb_device_t *dev, usb_request_t *
     return USB_RESULT_HANDLED;
 }
 
-static usb_result_t _usb_standard_request_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+static usb_result_t usb_standard_request_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     switch (req->bRequest) {
         case USB_REQUEST_GET_STATUS:
@@ -381,7 +377,7 @@ static usb_result_t _usb_standard_request_device(usb_device_t *dev, usb_request_
     return USB_RESULT_NOTSUPP;
 }
 
-static usb_result_t _usb_standard_request_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+static usb_result_t usb_standard_request_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     switch (req->bRequest) {
         case USB_REQUEST_CLR_FEATURE:
@@ -394,12 +390,12 @@ static usb_result_t _usb_standard_request_interface(usb_device_t *dev, usb_reque
             return usb_stadard_set_interface(dev, req, buf, len);
         case USB_REQUEST_GET_STATUS:
             return usb_standard_get_status_interface(dev, req, buf, len);
-    }
+    }    
 
     return USB_RESULT_NOTSUPP;
 }
 
-static usb_result_t _usb_standard_request_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+static usb_result_t usb_standard_request_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     switch (req->bRequest) {
         case USB_REQUEST_CLR_FEATURE:
@@ -434,12 +430,12 @@ usb_result_t _usb_standard_request(usb_device_t *dev, usb_request_t *req, uint8_
 
     switch (req->bmRequestType & USB_REQ_RECIPIENT_MASK) {
         case USB_REQ_RECIPIENT_DEVICE:
-            return _usb_standard_request_device(dev, req, buf, len);
+            return usb_standard_request_device(dev, req, buf, len);
         case USB_REQ_RECIPIENT_INTERFACE:
-            return _usb_standard_request_interface(dev, req, buf, len);
+            return usb_standard_request_interface(dev, req, buf, len);
         case USB_REQ_RECIPIENT_ENDPOINT:
-            return _usb_standard_request_endpoint(dev, req, buf, len);
+            return usb_standard_request_endpoint(dev, req, buf, len);
     }
-    
+
     return USB_RESULT_NOTSUPP;
 }
