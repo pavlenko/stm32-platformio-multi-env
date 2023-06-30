@@ -253,13 +253,52 @@ void usb_ep_write_packet(usb_device_t *dev, uint8_t address, const void *buf, ui
 void usb_ep_stall_set(usb_device_t *dev, uint8_t address, uint8_t stall)
 {
     (void) dev;
+	if (address == 0) {
+		// USB_SET_EP_TX_STAT(addr, stall ? USB_EP_TX_STAT_STALL : USB_EP_TX_STAT_NAK);
+		*(USB_EP[address].EPnR) = (*(USB_EP[address].EPnR) & (USB_EPREG_MASK & ~USB_EPTX_STAT))
+		                        | (stall ? USB_EP_TX_STALL : USB_EP_TX_NAK);
+	}
+
+	if (address & 0x80) {
+		address &= 0x7F;
+		// USB_SET_EP_TX_STAT(addr, stall ? USB_EP_TX_STAT_STALL : USB_EP_TX_STAT_NAK);
+		*(USB_EP[address].EPnR) = (*(USB_EP[address].EPnR) & (USB_EPREG_MASK & ~USB_EPTX_STAT))
+		                        | (stall ? USB_EP_TX_STALL : USB_EP_TX_NAK);
+
+		/* Reset to DATA0 if clearing stall condition. */
+		if (!stall) {
+			// USB_CLR_EP_TX_DTOG(addr);
+			*(USB_EP[address].EPnR) = *(USB_EP[address].EPnR) & (USB_EPREG_MASK | USB_EPTX_DTOG1 | USB_EPTX_DTOG2);
+		}
+	} else {
+		/* Reset to DATA0 if clearing stall condition. */
+		if (!stall) {
+			// USB_CLR_EP_RX_DTOG(addr);
+			*(USB_EP[address].EPnR) = *(USB_EP[address].EPnR) & (USB_EPREG_MASK | USB_EPRX_DTOG1 | USB_EPRX_DTOG2);
+		}
+
+		// USB_SET_EP_RX_STAT(addr, stall ? USB_EP_RX_STAT_STALL : USB_EP_RX_STAT_VALID);
+		*(USB_EP[address].EPnR) = (*(USB_EP[address].EPnR) & (USB_EPREG_MASK & ~USB_EPRX_STAT))
+		                        | (stall ? USB_EP_RX_STALL : USB_EP_RX_NAK);
+	}
 }
 
 uint8_t usb_ep_stall_get(usb_device_t *dev, uint8_t address)
 {
     (void) dev;
     (void) address;
-    return 0;
+	if (address & 0x80) {
+		return (*(USB_EP[address & 0x7F].EPnR) & USB_EPTX_STAT) == USB_EP_TX_STALL;
+		// if ((*USB_EP_REG(addr & 0x7F) & USB_EP_TX_STAT) == USB_EP_TX_STAT_STALL) {
+		// 	return 1;
+		// }
+	} else {
+		return (*(USB_EP[address].EPnR) & USB_EPRX_STAT) == USB_EP_RX_STALL;
+		// if ((*USB_EP_REG(addr) & USB_EP_RX_STAT) == USB_EP_RX_STAT_STALL) {
+		// 	return 1;
+		// }
+	}
+    // return 0;
 }
 
 void usb_ep_nak_set(usb_device_t *dev, uint8_t address, uint8_t nak)
