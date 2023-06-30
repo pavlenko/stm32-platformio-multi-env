@@ -217,8 +217,9 @@ __attribute__((weak))
  * @param address EP address (direction is ignored)
  * @param buf     pointer to user data to write
  * @param len     # of bytes
+ * @return Actual # of bytes read
  */
-void usb_ep_write_packet(usb_device_t *dev, uint8_t address, const void *buf, uint16_t len);
+uint16_t usb_ep_write_packet(usb_device_t *dev, uint8_t address, const void *buf, uint16_t len);
 
 __attribute__((weak))
 /**

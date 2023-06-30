@@ -133,6 +133,7 @@ int main(void) {
 
 /* Pointer to memory address cast helper */
 #define USB_IO(addr) ((__IO uint16_t *)(addr))
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
 /* Endpoint related registers structure */
 typedef struct {
@@ -154,6 +155,8 @@ const usb_endpoint_t USB_EP[8] = {
 	{USB_IO(USB_EP6R), USB_IO(USB_EP6_BTABLE), USB_IO(USB_EP6_BTABLE + 2), USB_IO(USB_EP6_BTABLE + 4), USB_IO(USB_EP6_BTABLE + 6)},
 	{USB_IO(USB_EP7R), USB_IO(USB_EP7_BTABLE), USB_IO(USB_EP7_BTABLE + 2), USB_IO(USB_EP7_BTABLE + 4), USB_IO(USB_EP7_BTABLE + 6)},
 };
+
+uint8_t st_usbfs_force_nak[8] = {0};
 
 /**
  * Setup an endpoint
@@ -239,15 +242,50 @@ uint16_t usb_ep_read_packet(usb_device_t *dev, uint8_t address, const void *buf,
     (void) address;
     (void) buf;
     (void) len;
-    return 0;
+	// if ((*USB_EP_REG(addr) & USB_EP_RX_STAT) == USB_EP_RX_STAT_VALID) {
+	// 	return 0;
+	// }
+	if ((*(USB_EP[address].EPnR) & USB_EPRX_STAT) == USB_EP_RX_VALID) {
+		return 0;
+	}
+
+	// len = MIN(USB_GET_EP_RX_COUNT(addr) & 0x3ff, len);
+	len = MIN(*(USB_EP[address].EPnRX_COUNT) & 0x3FF, len);
+
+	// st_usbfs_copy_from_pm(buf, USB_GET_EP_RX_BUFF(addr), len);
+	// USB_CLR_EP_RX_CTR(addr);
+	*(USB_EP[address].EPnR) = *(USB_EP[address].EPnR) & (USB_EPREG_MASK | USB_EP_CTR_RX);
+
+	if (!st_usbfs_force_nak[address]) {
+		// USB_SET_EP_RX_STAT(addr, USB_EP_RX_STAT_VALID);
+		*(USB_EP[address].EPnR) = (*(USB_EP[address].EPnR) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_VALID;
+	}
+
+	return len;
 }
 
-void usb_ep_write_packet(usb_device_t *dev, uint8_t address, const void *buf, uint16_t len)
+uint16_t usb_ep_write_packet(usb_device_t *dev, uint8_t address, const void *buf, uint16_t len)
 {
     (void) dev;
     (void) address;
     (void) buf;
     (void) len;
+	address &= 0x7F;
+
+	// if ((*USB_EP_REG(addr) & USB_EP_TX_STAT) == USB_EP_TX_STAT_VALID) {
+	// 	return 0;
+	// }
+	if ((*(USB_EP[address].EPnR) & USB_EPTX_STAT) == USB_EP_TX_VALID) {
+		return 0;
+	}
+
+	// st_usbfs_copy_to_pm(USB_GET_EP_TX_BUFF(addr), buf, len);
+	// USB_SET_EP_TX_COUNT(addr, len);
+	*(USB_EP[address].EPnTX_COUNT) = len;
+	// USB_SET_EP_TX_STAT(addr, USB_EP_TX_STAT_VALID);
+	*(USB_EP[address].EPnR) = (*(USB_EP[address].EPnR) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_VALID;
+
+	return len;
 }
 
 void usb_ep_stall_set(usb_device_t *dev, uint8_t address, uint8_t stall)
@@ -304,6 +342,19 @@ uint8_t usb_ep_stall_get(usb_device_t *dev, uint8_t address)
 void usb_ep_nak_set(usb_device_t *dev, uint8_t address, uint8_t nak)
 {
     (void) dev;
+	if (address & 0x80) {
+		return;
+	}
+
+	st_usbfs_force_nak[address] = nak;
+
+	if (nak) {
+		// USB_SET_EP_RX_STAT(addr, USB_EP_RX_STAT_NAK);
+		*(USB_EP[address].EPnR) = (*(USB_EP[address].EPnR) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_NAK;
+	} else {
+		// USB_SET_EP_RX_STAT(addr, USB_EP_RX_STAT_VALID);
+		*(USB_EP[address].EPnR) = (*(USB_EP[address].EPnR) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_VALID;
+	}
 }
 
 void st_usbfs_poll(usb_device_t *dev)
