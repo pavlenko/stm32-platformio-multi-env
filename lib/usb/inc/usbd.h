@@ -132,6 +132,8 @@ typedef struct usb_device_s {
     uint8_t current_address;
     uint8_t current_config;
 
+    uint16_t pm_top;    /**< Top of allocated endpoint buffer memory */
+
     uint8_t *ctrl_buf;  /**< Internal buffer used for control transfers */
     uint16_t ctrl_len;
 
