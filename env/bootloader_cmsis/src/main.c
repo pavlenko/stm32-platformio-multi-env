@@ -174,8 +174,8 @@ int main(void) {
 #define USB_CLR_EP_RX_DTOG(EP) \
 	SET_REG(USB_EP_REG(EP), GET_REG(USB_EP_REG(EP)) & (USB_EP_NTOGGLE_MSK | USB_EP_RX_DTOG))
 
-#define USB_EP_ADDR_FIELD 0x000F
-#define USB_EP_ADDR_MASK (USB_EPREG_MASK & ~USB_EPADDR_FIELD)
+#define USB_EP_ADDR_FIELD 0x000F // TODO leave
+#define USB_EP_ADDR_MASK (USB_EPREG_MASK & ~USB_EPADDR_FIELD) // TODO leave
 
 #define USB_EP_TYPE_BULK      0x0000
 #define USB_EP_TYPE_CONTROL   0x0200 // 00 10 00 00
@@ -212,6 +212,37 @@ int main(void) {
 #define USB_SET_EP_TX_COUNT(EP, COUNT)	SET_REG(USB_EP_TX_COUNT(EP), COUNT)
 #define USB_SET_EP_RX_ADDR(EP, ADDR)	SET_REG(USB_EP_RX_ADDR(EP), ADDR)
 #define USB_SET_EP_RX_COUNT(EP, COUNT)	SET_REG(USB_EP_RX_COUNT(EP), COUNT)
+
+/* Each endpoint buffer table addresses */
+#define USB_EP0_BTABLE (USB_BASE + 0x50 + 0x00)
+#define USB_EP1_BTABLE (USB_BASE + 0x50 + 0x08)
+#define USB_EP2_BTABLE (USB_BASE + 0x50 + 0x10)
+#define USB_EP3_BTABLE (USB_BASE + 0x50 + 0x18)
+#define USB_EP4_BTABLE (USB_BASE + 0x50 + 0x20)
+#define USB_EP5_BTABLE (USB_BASE + 0x50 + 0x28)
+#define USB_EP6_BTABLE (USB_BASE + 0x50 + 0x30)
+#define USB_EP7_BTABLE (USB_BASE + 0x50 + 0x38)
+
+/* Endpoint related registers structure */
+typedef struct {
+	__IO uint16_t EPnR;        // USB_BASE + n*4
+	__IO uint16_t EPnTX_ADDR;  // USB_BASE + 0x50 + n*8 + 0
+	__IO uint16_t EPnTX_COUNT; // USB_BASE + 0x50 + n*8 + 2
+	__IO uint16_t EPnRX_ADDR;  // USB_BASE + 0x50 + n*8 + 4
+	__IO uint16_t EPnRX_COUNT; // USB_BASE + 0x50 + n*8 + 6
+} usb_endpoint_t;
+
+/* Helper array with define all endpoints structures */
+const usb_endpoint_t USB_EP[1] = {
+	{USB_EP0R, USB_EP0_BTABLE, USB_EP0_BTABLE + 2, USB_EP0_BTABLE + 4, USB_EP0_BTABLE + 6},
+	{USB_EP1R, USB_EP1_BTABLE, USB_EP1_BTABLE + 2, USB_EP1_BTABLE + 4, USB_EP1_BTABLE + 6},
+	{USB_EP2R, USB_EP2_BTABLE, USB_EP2_BTABLE + 2, USB_EP2_BTABLE + 4, USB_EP2_BTABLE + 6},
+	{USB_EP3R, USB_EP3_BTABLE, USB_EP3_BTABLE + 2, USB_EP3_BTABLE + 4, USB_EP3_BTABLE + 6},
+	{USB_EP4R, USB_EP4_BTABLE, USB_EP4_BTABLE + 2, USB_EP4_BTABLE + 4, USB_EP4_BTABLE + 6},
+	{USB_EP5R, USB_EP5_BTABLE, USB_EP5_BTABLE + 2, USB_EP5_BTABLE + 4, USB_EP5_BTABLE + 6},
+	{USB_EP6R, USB_EP6_BTABLE, USB_EP6_BTABLE + 2, USB_EP6_BTABLE + 4, USB_EP6_BTABLE + 6},
+	{USB_EP7R, USB_EP7_BTABLE, USB_EP7_BTABLE + 2, USB_EP7_BTABLE + 4, USB_EP7_BTABLE + 6},
+}
 
 /**
  * Setup an endpoint
