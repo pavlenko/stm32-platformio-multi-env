@@ -114,7 +114,7 @@ void dfu_memory_write_uint16(uint32_t address, uint16_t data)
 void st_usbfs_poll(usb_device_t *dev);
 
 int main(void) {
-    // usb_request_t req = {};
+    usbd_init(&usb_device);
     while (1) {
         //usb_control_request_dispatch(&usb_device, &req);
 		st_usbfs_poll(&usb_device);
@@ -177,7 +177,7 @@ void usb_set_address(usb_device_t *dev, uint8_t address)
  * @param max_size Endpoint max size
  * @param cb       Callback to execute
  */
-void usb_ep_setup(usb_device_t *dev, uint8_t address, uint8_t type, uint16_t max_size, usb_cb_endpoint cb)
+void usb_ep_setup(usb_device_t *dev, uint8_t address, uint8_t type, uint16_t max_size, usb_cb_endpoint_t cb)
 {
     (void) dev;
     (void) address;
@@ -382,62 +382,59 @@ void st_usbfs_poll(usb_device_t *dev)
 
 	if (istr & USB_ISTR_CTR) {
 		uint8_t ep = istr & USB_ISTR_EP_ID;
-		// uint8_t type;
+		uint8_t type;
 
 		if (istr & USB_ISTR_DIR) {
 			/* OUT or SETUP? */
 			if (*(USB_EP[ep].EPnR) & USB_EP_SETUP) {
-				// type = USB_TRANSACTION_SETUP;
+				type = USB_TRANSACTION_SETUP;
 				usb_ep_read_packet(dev, ep, &dev->control.req, 8);
-				usb_control_setup(dev, ep);
 			} else {
-				// type = USB_TRANSACTION_OUT;
-				usb_control_out(dev, ep);
+				type = USB_TRANSACTION_OUT;
 			}
 		} else {
-			// type = USB_TRANSACTION_IN;
+			type = USB_TRANSACTION_IN;
 			// USB_CLR_EP_TX_CTR(ep);
 			*(USB_EP[ep].EPnR) = *(USB_EP[ep].EPnR) & (USB_EPREG_MASK | USB_EP_CTR_TX);
-			usb_control_in(dev, ep);
 		}
 
-		//TODO need callback map for endpoints
-		// if (dev->user_callback_ctr[ep][type]) {
-			// dev->user_callback_ctr[ep][type] (dev, ep);
-		// } else {
+		if (dev->cb_endpoint[ep][type]) {
+			dev->cb_endpoint[ep][type] (dev, ep);
+		} else {
 			// USB_CLR_EP_RX_CTR(ep);
-			// *(USB_EP[ep].EPnR) = *(USB_EP[ep].EPnR) & (USB_EPREG_MASK | USB_EP_CTR_RX);
-		// }
+			*(USB_EP[ep].EPnR) = *(USB_EP[ep].EPnR) & (USB_EPREG_MASK | USB_EP_CTR_RX);
+		}
 	}
 
 	if (istr & USB_ISTR_SUSP) {
 		// USB_CLR_ISTR_SUSP();
 		USB->ISTR &= ~USB_ISTR_SUSP;
-		// if (dev->user_callback_suspend) {
-		// 	dev->user_callback_suspend();
-		// }
+		if (dev->cb_suspend) {
+			dev->cb_suspend();
+		}
 	}
 
 	if (istr & USB_ISTR_WKUP) {
 		// USB_CLR_ISTR_WKUP();
 		USB->ISTR &= ~USB_ISTR_WKUP;
-		// if (dev->user_callback_resume) {
-		// 	dev->user_callback_resume();
-		// }
+		if (dev->cb_resume) {
+			dev->cb_resume();
+		}
 	}
 
 	if (istr & USB_ISTR_SOF) {
 		// USB_CLR_ISTR_SOF();
 		USB->ISTR &= ~USB_ISTR_SOF;
-		// if (dev->user_callback_sof) {
-		// 	dev->user_callback_sof();
-		// }
+		if (dev->cb_sof) {
+			dev->cb_sof();
+		}
 	}
 
-	// if (dev->user_callback_sof) {
+	if (dev->cb_sof) {
 		// *USB_CNTR_REG |= USB_CNTR_SOFM;
-	// } else {
+		USB->CNTR |= USB_CNTR_SOFM;
+	} else {
 		// *USB_CNTR_REG &= ~USB_CNTR_SOFM;
 		USB->CNTR &= ~USB_CNTR_SOFM;
-	// }
+	}
 }

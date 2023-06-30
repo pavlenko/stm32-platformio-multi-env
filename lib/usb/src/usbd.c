@@ -10,7 +10,19 @@
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Extern function prototypes ------------------------------------------------*/
-/* Exported functions --------------------------------------------------------*/
+/* Function definitions ------------------------------------------------------*/
+
+void usbd_init(usb_device_t *dev)
+{
+    dev->cb_endpoint[0][USB_TRANSACTION_SETUP] = usb_control_setup;
+	dev->cb_endpoint[0][USB_TRANSACTION_OUT]   = usb_control_out;
+	dev->cb_endpoint[0][USB_TRANSACTION_IN]    = usb_control_in;
+
+	uint8_t i;
+	for (i = 0; i < USB_MAX_CB_SET_CONFIGURATION; i++) {
+		dev->cb_set_configuration[i] = NULL;
+	}
+}
 
 bool usb_register_cb_set_configuration(usb_device_t *dev, usb_cb_set_configuration_t cb)
 {
@@ -57,5 +69,3 @@ void usb_reset(usb_device_t *dev)
 	// 	usbd_dev->user_callback_reset();
 	// }
 }
-
-/* Private functions ---------------------------------------------------------*/

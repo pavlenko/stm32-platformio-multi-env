@@ -97,7 +97,7 @@ typedef void (*usb_cb_set_interface_t)(usb_device_t *dev, uint16_t wIndex, uint1
  * @param dev USB device handle structure
  * @param ep USB endpoint number
  */
-typedef void (*usb_cb_endpoint)(usb_device_t *dev, uint8_t ep);
+typedef void (*usb_cb_endpoint_t)(usb_device_t *dev, uint8_t ep);
 
 /* Exported constants --------------------------------------------------------*/
 #ifndef USB_MAX_CB_CONTROL
@@ -139,14 +139,21 @@ typedef struct usb_device_s {
 
     usb_control_t control;
 
+    usb_cb_endpoint_t cb_endpoint[8][3];
+    void (*cb_reset)(void);
+	void (*cb_suspend)(void);
+	void (*cb_resume)(void);
+	void (*cb_sof)(void);
     usb_cb_control_t cb_control[USB_MAX_CB_CONTROL];
     usb_cb_set_configuration_t cb_set_configuration[USB_MAX_CB_SET_CONFIGURATION];
-} __attribute__((packed)) usb_device_t;
+} usb_device_t;
 
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
+
+void usbd_init(usb_device_t *dev);
 
 /**
  * Register a custom set configuration request callback
@@ -197,7 +204,7 @@ __attribute__((weak))
  * @param max_size Endpoint max size
  * @param cb       Callback to execute
  */
-void usb_ep_setup(usb_device_t *dev, uint8_t address, uint8_t type, uint16_t max_size, usb_cb_endpoint cb);
+void usb_ep_setup(usb_device_t *dev, uint8_t address, uint8_t type, uint16_t max_size, usb_cb_endpoint_t cb);
 
 __attribute__((weak))
 /**
