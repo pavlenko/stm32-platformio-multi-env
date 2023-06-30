@@ -111,10 +111,13 @@ void dfu_memory_write_uint16(uint32_t address, uint16_t data)
     (void) data;
 }
 
+void st_usbfs_poll(usb_device_t *dev);
+
 int main(void) {
-    usb_request_t req = {};
+    // usb_request_t req = {};
     while (1) {
-        usb_control_request_dispatch(&usb_device, &req);
+        //usb_control_request_dispatch(&usb_device, &req);
+		st_usbfs_poll(&usb_device);
     }
 }
 
@@ -379,46 +382,53 @@ void st_usbfs_poll(usb_device_t *dev)
 
 	if (istr & USB_ISTR_CTR) {
 		uint8_t ep = istr & USB_ISTR_EP_ID;
-		uint8_t type;
+		// uint8_t type;
 
 		if (istr & USB_ISTR_DIR) {
 			/* OUT or SETUP? */
 			if (*(USB_EP[ep].EPnR) & USB_EP_SETUP) {
-				type = USB_TRANSACTION_SETUP;
+				// type = USB_TRANSACTION_SETUP;
 				usb_ep_read_packet(dev, ep, &dev->control.req, 8);
+				usb_control_setup(dev, ep);
 			} else {
-				type = USB_TRANSACTION_OUT;
+				// type = USB_TRANSACTION_OUT;
+				usb_control_out(dev, ep);
 			}
 		} else {
-			type = USB_TRANSACTION_IN;
+			// type = USB_TRANSACTION_IN;
 			// USB_CLR_EP_TX_CTR(ep);
 			*(USB_EP[ep].EPnR) = *(USB_EP[ep].EPnR) & (USB_EPREG_MASK | USB_EP_CTR_TX);
+			usb_control_in(dev, ep);
 		}
 
+		//TODO need callback map for endpoints
 		// if (dev->user_callback_ctr[ep][type]) {
 			// dev->user_callback_ctr[ep][type] (dev, ep);
 		// } else {
 			// USB_CLR_EP_RX_CTR(ep);
-			*(USB_EP[ep].EPnR) = *(USB_EP[ep].EPnR) & (USB_EPREG_MASK | USB_EP_CTR_RX);
+			// *(USB_EP[ep].EPnR) = *(USB_EP[ep].EPnR) & (USB_EPREG_MASK | USB_EP_CTR_RX);
 		// }
 	}
 
 	if (istr & USB_ISTR_SUSP) {
-		USB_CLR_ISTR_SUSP();
+		// USB_CLR_ISTR_SUSP();
+		USB->ISTR &= ~USB_ISTR_SUSP;
 		// if (dev->user_callback_suspend) {
 		// 	dev->user_callback_suspend();
 		// }
 	}
 
 	if (istr & USB_ISTR_WKUP) {
-		USB_CLR_ISTR_WKUP();
+		// USB_CLR_ISTR_WKUP();
+		USB->ISTR &= ~USB_ISTR_WKUP;
 		// if (dev->user_callback_resume) {
 		// 	dev->user_callback_resume();
 		// }
 	}
 
 	if (istr & USB_ISTR_SOF) {
-		USB_CLR_ISTR_SOF();
+		// USB_CLR_ISTR_SOF();
+		USB->ISTR &= ~USB_ISTR_SOF;
 		// if (dev->user_callback_sof) {
 		// 	dev->user_callback_sof();
 		// }

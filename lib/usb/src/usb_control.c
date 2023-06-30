@@ -153,9 +153,9 @@ static void usb_control_setup_wr(usb_device_t *dev, usb_request_t *req)
     usb_ep_nak_set(dev, 0, 0);
 }
 
-void usb_control_setup(usb_device_t *dev, uint8_t ea)
+void usb_control_setup(usb_device_t *dev, uint8_t ep)
 {
-    (void) ea;
+    (void) ep;
 
     dev->control.complete_cb = NULL;
 
@@ -168,9 +168,9 @@ void usb_control_setup(usb_device_t *dev, uint8_t ea)
     }
 }
 
-void usb_control_out(usb_device_t *dev, uint8_t ea)
+void usb_control_out(usb_device_t *dev, uint8_t ep)
 {
-    (void) ea;
+    (void) ep;
 
     switch (dev->control.state) {
         case USB_STATE_DATA_OUT:
@@ -207,9 +207,9 @@ void usb_control_out(usb_device_t *dev, uint8_t ea)
     }
 }
 
-void usb_control_in(usb_device_t *dev, uint8_t ea)
+void usb_control_in(usb_device_t *dev, uint8_t ep)
 {
-    (void) ea;
+    (void) ep;
     usb_request_t *req = &(dev->control.req);
 
     switch (dev->control.state) {
