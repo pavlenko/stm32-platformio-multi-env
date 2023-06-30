@@ -177,6 +177,11 @@ bool usb_register_cb_set_interface(usb_device_t *dev, usb_cb_set_interface_t cb)
  */
 bool usb_register_cb_control(usb_device_t *dev, uint8_t type, uint8_t mask, usb_cb_control_t cb);
 
+void usb_reset(usb_device_t *dev);//TODO private
+
+__attribute__((weak))
+void usb_set_address(usb_device_t *dev, uint8_t address);
+
 __attribute__((weak))
 /**
  * Setup an endpoint

@@ -158,6 +158,13 @@ const usb_endpoint_t USB_EP[8] = {
 
 uint8_t st_usbfs_force_nak[8] = {0};
 
+void usb_set_address(usb_device_t *dev, uint8_t address)
+{
+	/* Set device address and enable. */
+	// SET_REG(USB_DADDR_REG, (addr & USB_DADDR_ADDR) | USB_DADDR_EF);
+	USB->DADDR = (address & USB_DADDR_ADD) | USB_DADDR_EF;
+}
+
 /**
  * Setup an endpoint
  * 
@@ -360,4 +367,67 @@ void usb_ep_nak_set(usb_device_t *dev, uint8_t address, uint8_t nak)
 void st_usbfs_poll(usb_device_t *dev)
 {
 	(void) dev;
+	uint16_t istr = USB->ISTR;//*USB_ISTR_REG;
+
+	if (istr & USB_ISTR_RESET) {
+		// USB_CLR_ISTR_RESET();
+		USB->ISTR &= ~USB_ISTR_RESET;
+		dev->pm_top = USB_PM_TOP;
+		usb_reset(dev);
+		return;
+	}
+
+	if (istr & USB_ISTR_CTR) {
+		uint8_t ep = istr & USB_ISTR_EP_ID;
+		uint8_t type;
+
+		if (istr & USB_ISTR_DIR) {
+			/* OUT or SETUP? */
+			if (*(USB_EP[ep].EPnR) & USB_EP_SETUP) {
+				type = USB_TRANSACTION_SETUP;
+				usb_ep_read_packet(dev, ep, &dev->control.req, 8);
+			} else {
+				type = USB_TRANSACTION_OUT;
+			}
+		} else {
+			type = USB_TRANSACTION_IN;
+			// USB_CLR_EP_TX_CTR(ep);
+			*(USB_EP[ep].EPnR) = *(USB_EP[ep].EPnR) & (USB_EPREG_MASK | USB_EP_CTR_TX);
+		}
+
+		// if (dev->user_callback_ctr[ep][type]) {
+			// dev->user_callback_ctr[ep][type] (dev, ep);
+		// } else {
+			// USB_CLR_EP_RX_CTR(ep);
+			*(USB_EP[ep].EPnR) = *(USB_EP[ep].EPnR) & (USB_EPREG_MASK | USB_EP_CTR_RX);
+		// }
+	}
+
+	if (istr & USB_ISTR_SUSP) {
+		USB_CLR_ISTR_SUSP();
+		// if (dev->user_callback_suspend) {
+		// 	dev->user_callback_suspend();
+		// }
+	}
+
+	if (istr & USB_ISTR_WKUP) {
+		USB_CLR_ISTR_WKUP();
+		// if (dev->user_callback_resume) {
+		// 	dev->user_callback_resume();
+		// }
+	}
+
+	if (istr & USB_ISTR_SOF) {
+		USB_CLR_ISTR_SOF();
+		// if (dev->user_callback_sof) {
+		// 	dev->user_callback_sof();
+		// }
+	}
+
+	// if (dev->user_callback_sof) {
+		// *USB_CNTR_REG |= USB_CNTR_SOFM;
+	// } else {
+		// *USB_CNTR_REG &= ~USB_CNTR_SOFM;
+		USB->CNTR &= ~USB_CNTR_SOFM;
+	// }
 }

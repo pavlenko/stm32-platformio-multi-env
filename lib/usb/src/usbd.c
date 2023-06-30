@@ -46,4 +46,16 @@ bool usb_register_cb_control(usb_device_t *dev, uint8_t type, uint8_t mask, usb_
     return true;
 }
 
+void usb_reset(usb_device_t *dev)
+{
+	dev->current_address = 0;
+	dev->current_config = 0;
+	usb_ep_setup(dev, 0, USB_ENDPOINT_TRANSFER_TYPE_CONTROL, dev->device_descr->bMaxPacketSize0, NULL);
+	usb_set_address(dev, 0);
+
+	// if (usbd_dev->user_callback_reset) {
+	// 	usbd_dev->user_callback_reset();
+	// }
+}
+
 /* Private functions ---------------------------------------------------------*/
