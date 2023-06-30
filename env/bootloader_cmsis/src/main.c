@@ -118,6 +118,9 @@ int main(void) {
     }
 }
 
+/* USB_PMA???; USB_PMAADDR - USB_BASE  = 0x6000 - 0x5C00 = ?*/
+#define USB_PM_TOP 0x40
+
 /* Each endpoint buffer table addresses */
 #define USB_EP0_BTABLE (USB_BASE + 0x50 + 0x00)
 #define USB_EP1_BTABLE (USB_BASE + 0x50 + 0x08)
@@ -195,7 +198,7 @@ void usb_ep_setup(usb_device_t *dev, uint8_t address, uint8_t type, uint16_t max
         // USB_CLR_EP_TX_DTOG(address);
 		*(USB_EP[address].EPnR) = *(USB_EP[address].EPnR) & (USB_EPREG_MASK | USB_EPTX_DTOG1 | USB_EPTX_DTOG2);
 		// USB_SET_EP_TX_STAT(address, USB_EP_TX_STAT_NAK);
-		*(USB_EP[address].EPnR) = (*(USB_EP[address].EPnR) & (USB_EPREG_MASK | ~USB_EPTX_STAT)) | USB_EP_TX_NAK;
+		*(USB_EP[address].EPnR) = (*(USB_EP[address].EPnR) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_NAK;
 		dev->pm_top += max_size;
 	}
 
@@ -210,7 +213,7 @@ void usb_ep_setup(usb_device_t *dev, uint8_t address, uint8_t type, uint16_t max
 		// USB_CLR_EP_RX_DTOG(address);
 		*(USB_EP[address].EPnR) = *(USB_EP[address].EPnR) & (USB_EPREG_MASK | USB_EPRX_DTOG1 | USB_EPRX_DTOG2);
 		// USB_SET_EP_RX_STAT(address, USB_EP_RX_STAT_VALID);
-		*(USB_EP[address].EPnR) = (*(USB_EP[address].EPnR) & (USB_EPREG_MASK | ~USB_EPRX_STAT)) | USB_EP_RX_VALID;
+		*(USB_EP[address].EPnR) = (*(USB_EP[address].EPnR) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_VALID;
 		dev->pm_top += realsize;
 	}
 }
@@ -218,6 +221,16 @@ void usb_ep_setup(usb_device_t *dev, uint8_t address, uint8_t type, uint16_t max
 void usb_ep_reset(usb_device_t *dev)
 {
     (void) dev;
+	uint8_t i;
+
+	/* Reset all endpoints. */
+	for (i = 1; i < 8; i++) {//DO not loop, direct call all endpoints
+		//USB_SET_EP_TX_STAT(i, USB_EP_TX_STAT_DISABLED);
+		*(USB_EP[i].EPnR) = (*(USB_EP[i].EPnR) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_DIS;
+		//USB_SET_EP_RX_STAT(i, USB_EP_RX_STAT_DISABLED);
+		*(USB_EP[i].EPnR) = (*(USB_EP[i].EPnR) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_DIS;
+	}
+	dev->pm_top = USB_PM_TOP + (2 * dev->device_descr->bMaxPacketSize0);
 }
 
 uint16_t usb_ep_read_packet(usb_device_t *dev, uint8_t address, const void *buf, uint16_t len)
