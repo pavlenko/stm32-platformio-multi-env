@@ -14,6 +14,7 @@
 
 void usbd_init(usb_device_t *dev)
 {
+    //TODO init HW
     dev->cb_endpoint[0][USB_TRANSACTION_SETUP] = usb_control_setup;
 	dev->cb_endpoint[0][USB_TRANSACTION_OUT]   = usb_control_out;
 	dev->cb_endpoint[0][USB_TRANSACTION_IN]    = usb_control_in;

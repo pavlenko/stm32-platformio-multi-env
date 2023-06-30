@@ -145,6 +145,8 @@ typedef struct {
 	__IO uint16_t *EPnTX_COUNT; // USB_BASE + 0x50 + n*8 + 2
 	__IO uint16_t *EPnRX_ADDR;  // USB_BASE + 0x50 + n*8 + 4
 	__IO uint16_t *EPnRX_COUNT; // USB_BASE + 0x50 + n*8 + 6
+	__IO void *EPnTX_BUFF;
+	__IO void *EPnRX_BUFF;
 } usb_endpoint_t;
 
 /* Helper array with define all endpoints structures */
@@ -166,6 +168,37 @@ void usb_set_address(usb_device_t *dev, uint8_t address)
 	/* Set device address and enable. */
 	// SET_REG(USB_DADDR_REG, (addr & USB_DADDR_ADDR) | USB_DADDR_EF);
 	USB->DADDR = (address & USB_DADDR_ADD) | USB_DADDR_EF;
+}
+
+void st_usbfs_copy_to_pm(volatile void *vPM, const void *buf, uint16_t len)
+{
+	const uint16_t *lbuf = buf;
+	volatile uint32_t *PM = vPM;
+	for (len = (len + 1) >> 1; len; len--) {
+		*PM++ = *lbuf++;
+	}
+}
+
+/**
+ * Copy a data buffer from packet memory.
+ *
+ * @param buf Source pointer to data buffer.
+ * @param vPM Destination pointer into packet memory.
+ * @param len Number of bytes to copy.
+ */
+void st_usbfs_copy_from_pm(void *buf, const volatile void *vPM, uint16_t len)
+{
+	uint16_t *lbuf = buf;
+	const volatile uint16_t *PM = vPM;
+	uint8_t odd = len & 1;
+
+	for (len >>= 1; len; PM += 2, lbuf++, len--) {
+		*lbuf = *PM;
+	}
+
+	if (odd) {
+		*(uint8_t *) lbuf = *(uint8_t *) PM;
+	}
 }
 
 /**
@@ -262,7 +295,8 @@ uint16_t usb_ep_read_packet(usb_device_t *dev, uint8_t address, const void *buf,
 	// len = MIN(USB_GET_EP_RX_COUNT(addr) & 0x3ff, len);
 	len = MIN(*(USB_EP[address].EPnRX_COUNT) & 0x3FF, len);
 
-	// st_usbfs_copy_from_pm(buf, USB_GET_EP_RX_BUFF(addr), len);
+	// st_usbfs_copy_from_pm(buf, USB_GET_EP_RX_BUFF(address), len);
+	st_usbfs_copy_to_pm(buf, USB_EP[address].EPnRX_BUFF, len);
 	// USB_CLR_EP_RX_CTR(addr);
 	*(USB_EP[address].EPnR) = *(USB_EP[address].EPnR) & (USB_EPREG_MASK | USB_EP_CTR_RX);
 
@@ -290,6 +324,7 @@ uint16_t usb_ep_write_packet(usb_device_t *dev, uint8_t address, const void *buf
 	}
 
 	// st_usbfs_copy_to_pm(USB_GET_EP_TX_BUFF(addr), buf, len);
+	st_usbfs_copy_to_pm(USB_EP[address].EPnTX_BUFF, buf, len);
 	// USB_SET_EP_TX_COUNT(addr, len);
 	*(USB_EP[address].EPnTX_COUNT) = len;
 	// USB_SET_EP_TX_STAT(addr, USB_EP_TX_STAT_VALID);
