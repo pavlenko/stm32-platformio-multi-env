@@ -34,6 +34,12 @@ typedef enum usb_state_e {
     USB_STATE_STATUS_OUT,
 } usb_state_t;
 
+typedef enum _usbd_transaction {
+	USB_TRANSACTION_IN,
+	USB_TRANSACTION_OUT,
+	USB_TRANSACTION_SETUP,
+} usbd_transaction_t;
+
 typedef struct usb_device_s usb_device_t;
 
 /**
