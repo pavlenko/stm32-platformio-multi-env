@@ -27,7 +27,7 @@ static int usb_control_recv_chunk(usb_device_t *dev)
         dev->control.req.wLength - dev->control.ctrl_len
     );
     
-    uint16_t size = usb_ep_read_packet(
+    uint16_t size = dev->driver->ep_rd_packet(
         dev,
         0,
         dev->control.ctrl_buf + dev->control.ctrl_len,
@@ -48,24 +48,14 @@ static void usb_control_send_chunk(usb_device_t *dev)
 {
     if (dev->device_descr->bMaxPacketSize0 < dev->control.ctrl_len) {
         /* Data stage, normal transmission */
-        usb_ep_write_packet(
-            dev,
-            0,
-            dev->control.ctrl_buf,
-            dev->device_descr->bMaxPacketSize0
-        );
+        dev->driver->ep_wr_packet(dev, 0, dev->control.ctrl_buf, dev->device_descr->bMaxPacketSize0);
 
         dev->control.state = USB_STATE_DATA_IN;
         dev->control.ctrl_buf += dev->device_descr->bMaxPacketSize0;
         dev->control.ctrl_len -= dev->device_descr->bMaxPacketSize0;
     } else {
         /* Data stage, end of transmission */
-        usb_ep_write_packet(
-            dev,
-            0,
-            dev->control.ctrl_buf,
-            dev->control.ctrl_len
-        );
+        dev->driver->ep_wr_packet(dev, 0, dev->control.ctrl_buf, dev->control.ctrl_len);
 
         dev->control.state = dev->control.needs_zlp ? USB_STATE_DATA_IN : USB_STATE_LAST_DATA_IN;
         dev->control.needs_zlp = false;
@@ -76,7 +66,7 @@ static void usb_control_send_chunk(usb_device_t *dev)
 
 static void usb_stall_transaction(usb_device_t *dev)
 {
-    usb_ep_stall_set(dev, 0, 1);
+    dev->driver->ep_stall_set(dev, 0, 1);
     dev->control.state = USB_STATE_IDLE;
 }
 
@@ -124,7 +114,7 @@ static void usb_control_setup_rd(usb_device_t *dev, usb_request_t *req)
             usb_control_send_chunk(dev);
         } else {
             /* Go to status stage if handled. */
-            usb_ep_write_packet(dev, 0, NULL, 0);
+            dev->driver->ep_wr_packet(dev, 0, NULL, 0);
             dev->control.state = USB_STATE_STATUS_IN;
         }
     } else {
@@ -150,7 +140,7 @@ static void usb_control_setup_wr(usb_device_t *dev, usb_request_t *req)
         dev->control.state = USB_STATE_LAST_DATA_OUT;
     }
 
-    usb_ep_nak_set(dev, 0, 0);
+    dev->driver->ep_nak_set(dev, 0, 0);
 }
 
 void usb_control_setup(usb_device_t *dev, uint8_t ep)
@@ -158,8 +148,7 @@ void usb_control_setup(usb_device_t *dev, uint8_t ep)
     (void) ep;
 
     dev->control.complete_cb = NULL;
-
-    usb_ep_nak_set(dev, 0, 1);
+    dev->driver->ep_nak_set(dev, 0, 1);
 
     if (dev->control.req.wLength == 0 || dev->control.req.bmRequestType & 0x80) {
         usb_control_setup_rd(dev, &dev->control.req);
@@ -188,14 +177,14 @@ void usb_control_out(usb_device_t *dev, uint8_t ep)
             /* We have now received the full data payload. Invoke callback to process. */
             if (usb_control_request_dispatch(dev, &(dev->control.req))) {
                 /* Go to status stage on success. */
-                usb_ep_write_packet(dev, 0, NULL, 0);
+                dev->driver->ep_wr_packet(dev, 0, NULL, 0);
                 dev->control.state = USB_STATE_STATUS_IN;
             } else {
                 usb_stall_transaction(dev);
             }
             break;
         case USB_STATE_STATUS_OUT:
-            usb_ep_read_packet(dev, 0, NULL, 0);
+            dev->driver->ep_rd_packet(dev, 0, NULL, 0);
             dev->control.state = USB_STATE_IDLE;
             if (dev->control.complete_cb) {
                 dev->control.complete_cb(dev, &(dev->control.req), dev->control.complete_arg);

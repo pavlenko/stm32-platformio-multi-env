@@ -63,7 +63,7 @@ static usb_result_t usb_standard_get_status_endpoint(usb_device_t *dev, usb_requ
     if (*len > 2) {
         *len = 2;
     }
-    (*buf)[0] = usb_ep_stall_get(dev, req->wIndex) ? 1 : 0;
+    (*buf)[0] = dev->driver->ep_stall_get(dev, req->wIndex) ? 1 : 0;
     (*buf)[1] = 0;
 
     return USB_RESULT_HANDLED;
@@ -280,7 +280,7 @@ static usb_result_t usb_standard_set_configuration(usb_device_t *dev, usb_reques
         }
     }
 
-    usb_ep_reset(dev);
+    dev->driver->ep_reset(dev);
 
     if (dev->cb_set_configuration[0]) {
         for (i = 0; i < USB_MAX_CB_CONTROL; i++) {
@@ -400,12 +400,12 @@ static usb_result_t usb_standard_request_endpoint(usb_device_t *dev, usb_request
     switch (req->bRequest) {
         case USB_REQUEST_CLR_FEATURE:
             if (req->wValue == USB_FEATURE_ENDPOINT_HALT) {
-                usb_ep_stall_set(dev, req->wIndex, 0);
+                dev->driver->ep_stall_set(dev, req->wIndex, 0);
                 return USB_RESULT_HANDLED;
             }
         case USB_REQUEST_SET_FEATURE:
             if (req->wValue == USB_FEATURE_ENDPOINT_HALT) {
-                usb_ep_stall_set(dev, req->wIndex, 1);
+                dev->driver->ep_stall_set(dev, req->wIndex, 1);
                 return USB_RESULT_HANDLED;
             }
         case USB_REQUEST_GET_STATUS:

@@ -14,7 +14,8 @@
 
 void usbd_init(usb_device_t *dev)
 {
-    //TODO init HW
+    dev->driver->init();
+
     dev->cb_endpoint[0][USB_TRANSACTION_SETUP] = usb_control_setup;
 	dev->cb_endpoint[0][USB_TRANSACTION_OUT]   = usb_control_out;
 	dev->cb_endpoint[0][USB_TRANSACTION_IN]    = usb_control_in;
@@ -63,10 +64,11 @@ void usb_reset(usb_device_t *dev)
 {
 	dev->current_address = 0;
 	dev->current_config = 0;
-	usb_ep_setup(dev, 0, USB_ENDPOINT_TRANSFER_TYPE_CONTROL, dev->device_descr->bMaxPacketSize0, NULL);
-	usb_set_address(dev, 0);
+	
+    dev->driver->ep_setup(dev, 0, USB_ENDPOINT_TRANSFER_TYPE_CONTROL, dev->device_descr->bMaxPacketSize0, NULL);
+	dev->driver->set_address(dev, 0);
 
-	// if (usbd_dev->user_callback_reset) {
-	// 	usbd_dev->user_callback_reset();
-	// }
+	if (dev->cb_reset) {
+		dev->cb_reset();
+	}
 }

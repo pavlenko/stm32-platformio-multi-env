@@ -12,11 +12,14 @@ typedef struct {
 	__IO uint16_t *TX_COUNT; // USB_BASE + 0x50 + n*8 + 2
 	__IO uint16_t *RX_ADDR;  // USB_BASE + 0x50 + n*8 + 4
 	__IO uint16_t *RX_COUNT; // USB_BASE + 0x50 + n*8 + 6
-	__IO void *EPnTX_BUFF;
-	__IO void *EPnRX_BUFF;
+	__IO void *TX_BUFF;
+	__IO void *RX_BUFF;
 } st_usb_endpoint_t;
 
 /* Private define ------------------------------------------------------------*/
+
+/* To address of USB packed memory */
+#define USB_PM_TOP 0x40
 
 /* Pre-calculated endpoint related BTABLE addresses */
 #define USB_EP0_BTABLE (USB_BASE + 0x50 + 0x00)
@@ -30,6 +33,7 @@ typedef struct {
 
 /* Private macro -------------------------------------------------------------*/
 
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define USB_IO(addr) ((__IO uint16_t *)(addr))
 
 /* Private variables ---------------------------------------------------------*/
@@ -46,6 +50,8 @@ static const st_usb_endpoint_t USB_EP[8] = {
 	{USB_IO(USB_EP7R), USB_IO(USB_EP7_BTABLE), USB_IO(USB_EP7_BTABLE + 2), USB_IO(USB_EP7_BTABLE + 4), USB_IO(USB_EP7_BTABLE + 6)},
 };
 
+static bool st_usb_force_nak[8] = {0};
+
 /* Private function prototypes -----------------------------------------------*/
 /* External function prototypes ----------------------------------------------*/
 /* External variables --------------------------------------------------------*/
@@ -54,12 +60,12 @@ static const st_usb_endpoint_t USB_EP[8] = {
 /**
  * Set the receive buffer size for a given USB endpoint.
  *
- * @param dev the usb device handle returned from @ref usbd_init
- * @param ep Index of endpoint to configure.
+ * @param dev  USB device handle structure
+ * @param ep   Index of endpoint to configure.
  * @param size Size in bytes of the RX buffer. Legal sizes : {2,4,6...62}; {64,96,128...992}.
- * @returns (uint16) Actual size set
+ * @returns Actual size set
  */
-uint16_t _st_usb_set_ep_rx_bufsize(uint8_t ep, uint32_t size)
+static uint16_t _st_usb_set_ep_rx_bufsize(uint8_t ep, uint32_t size)
 {
 	uint16_t realsize;
 	/*
@@ -92,7 +98,61 @@ uint16_t _st_usb_set_ep_rx_bufsize(uint8_t ep, uint32_t size)
 	return realsize;
 }
 
-usb_device_t* st_usb_init(void)
+/**
+ * Copy a data buffer to packet memory.
+ *
+ * @param buf Destination pointer for data buffer.
+ * @param vPM Source pointer into packet memory.
+ * @param len Number of bytes to copy.
+ */
+static void _st_usb_copy_buf_to_pm(volatile void *vPM, const void *buf, uint16_t len)
+{
+    /*
+	 * This is a bytewise copy, so it always works, even on CM0(+)
+	 * that don't support unaligned accesses.
+	 */
+	const uint8_t *lbuf = buf;//TODO maybe change param types
+	volatile uint16_t *PM = vPM;//TODO maybe change param types
+	uint32_t i;
+	for (i = 0; i < len; i += 2) {
+		*PM++ = (uint16_t)lbuf[i+1] << 8 | lbuf[i];
+	}
+}
+
+/**
+ * Copy a data buffer from packet memory.
+ *
+ * @param buf Destination pointer for data buffer.
+ * @param vPM Source pointer into packet memory.
+ * @param len Number of bytes to copy.
+ */
+static void _st_usb_copy_pm_to_buf(void *buf, const volatile void *vPM, uint16_t len)
+{
+	const volatile uint16_t *PM = vPM;
+	uint8_t odd = len & 1;
+	len >>= 1;
+
+	if (((uintptr_t) buf) & 0x01) {
+		for (; len; PM++, len--) {
+			uint16_t value = *PM;
+			*(uint8_t *) buf++ = value;
+			*(uint8_t *) buf++ = value >> 8;
+		}
+	} else {
+		for (; len; PM++, buf += 2, len--) {
+			*(uint16_t *) buf = *PM;
+		}
+	}
+
+	if (odd) {
+		*(uint8_t *) buf = *(uint8_t *) PM;
+	}
+}
+
+/**
+ * Initialize HW
+ */
+static usb_device_t* st_usb_init(void)
 {
     /* Enable USB clock */
     RCC->APB1ENR |= RCC_APB1ENR_USBEN;
@@ -107,49 +167,283 @@ usb_device_t* st_usb_init(void)
     return NULL;
 }
 
-void st_usb_set_address(usb_device_t *dev, uint8_t addr)
+/**
+ * Set an address
+ * 
+ * @param dev  USB device handle structure
+ * @param addr Device assigned address
+ */
+static void st_usb_set_address(usb_device_t *dev, uint8_t addr)
 {
     (void) dev;
     USB->DADDR = (addr & USB_DADDR_ADD) | USB_DADDR_EF;
 }
 
-void st_usb_ep_setup(usb_device_t *dev, uint8_t addr, uint8_t type, uint16_t max_size, usb_cb_endpoint_t cb)
+/**
+ * Setup an endpoint
+ * 
+ * @param dev      USB device handle structure
+ * @param ep       Full EP address including direction (e.g. 0x01 or 0x81)
+ * @param type     Value for bmAttributes (USB_ENDPOINT_*)
+ * @param max_size Endpoint max size
+ * @param cb       Callback to execute
+ */
+static void st_usb_ep_setup(usb_device_t *dev, uint8_t ep, uint8_t type, uint16_t max_size, usb_cb_endpoint_t cb)
 {
-	uint8_t dir = addr & 0x80;
-	addr &= 0x7F;
+	uint8_t dir = ep & 0x80;
+	ep &= 0x7F;
 
-    *(USB_EP[addr].REG) = (*(USB_EP[addr].REG) & (USB_EPREG_MASK & ~USB_EPADDR_FIELD)) | addr;
-    *(USB_EP[addr].REG) = (*(USB_EP[addr].REG) & (USB_EPREG_MASK & ~USB_EP_T_FIELD)) | (type << USB_EP_T_FIELD_Pos);
+    *(USB_EP[ep].REG) = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPADDR_FIELD)) | ep;
+    *(USB_EP[ep].REG) = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EP_T_FIELD)) | (type << USB_EP_T_FIELD_Pos);
 	
-	if (dir || addr == 0) {
-		*(USB_EP[addr].TX_ADDR) = dev->pm_top;
+	if (dir || ep == 0) {
+		*(USB_EP[ep].TX_ADDR) = dev->pm_top;
 
 		if (cb) {
-			dev->cb_endpoint[addr][USB_TRANSACTION_IN] = (void *) cb;
+			dev->cb_endpoint[ep][USB_TRANSACTION_IN] = (void *) cb;
 		}
 
-		*(USB_EP[addr].REG) = *(USB_EP[addr].REG) & (USB_EPREG_MASK | USB_EPTX_DTOG1 | USB_EPTX_DTOG2);
-		*(USB_EP[addr].REG) = (*(USB_EP[addr].REG) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_NAK;
+		*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EPTX_DTOG1 | USB_EPTX_DTOG2);
+		*(USB_EP[ep].REG) = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_NAK;
 		dev->pm_top += max_size;
 	}
 
 	if (!dir) {
 		uint16_t realsize = 0;
-		*(USB_EP[addr].RX_ADDR) = dev->pm_top;
-		//TODO realsize = st_usbfs_set_ep_rx_bufsize(dev, address, max_size);
+		*(USB_EP[ep].RX_ADDR) = dev->pm_top;
+		realsize = _st_usb_set_ep_rx_bufsize(ep, max_size);
 		
         if (cb) {
-			dev->cb_endpoint[addr][USB_TRANSACTION_OUT] = (void *) cb;
+			dev->cb_endpoint[ep][USB_TRANSACTION_OUT] = (void *) cb;
 		}
 
-		*(USB_EP[addr].REG) = *(USB_EP[addr].REG) & (USB_EPREG_MASK | USB_EPRX_DTOG1 | USB_EPRX_DTOG2);
-		*(USB_EP[addr].REG) = (*(USB_EP[addr].REG) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_VALID;
+		*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EPRX_DTOG1 | USB_EPRX_DTOG2);
+		*(USB_EP[ep].REG) = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_VALID;
 		dev->pm_top += realsize;
 	}
 }
 
+/**
+ * Reset all endpoints
+ * 
+ * @param dev  USB device handle structure
+ */
+static void st_usb_ep_reset(usb_device_t *dev)
+{
+    (void) dev;
+	uint8_t i;
+
+	for (i = 1; i < 8; i++) {
+		*(USB_EP[i].REG) = (*(USB_EP[i].REG) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_DIS;
+		*(USB_EP[i].REG) = (*(USB_EP[i].REG) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_DIS;
+	}
+
+	dev->pm_top = USB_PM_TOP + (2 * dev->device_descr->bMaxPacketSize0);
+}
+
+/**
+ * Get STALL status of an endpoint
+ * 
+ * @param dev USB device handle structure
+ * @param ep  Full EP address (with direction bit)
+ * @return Non-zero if endpoint is stalled 
+ */
+static bool st_usb_ep_stall_get(usb_device_t *dev, uint8_t ep)
+{
+    (void) dev;
+	if (ep & 0x80) {
+		return (*(USB_EP[ep & 0x7F].REG) & USB_EPTX_STAT) == USB_EP_TX_STALL;
+	} else {
+		return (*(USB_EP[ep].REG) & USB_EPRX_STAT) == USB_EP_RX_STALL;
+	}
+}
+
+/**
+ * Set/clr STALL condition on an endpoint
+ * 
+ * @param dev   USB device handle structure
+ * @param ep    Full EP address (with direction bit)
+ * @param stall If 0, clear STALL, else set stall.
+ */
+static void st_usb_ep_stall_set(usb_device_t *dev, uint8_t ep, bool stall)
+{
+    (void) dev;
+	if (ep == 0) {
+		*(USB_EP[ep].REG)
+            = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | (stall ? USB_EP_TX_STALL : USB_EP_TX_NAK);
+	}
+
+	if (ep & 0x80) {
+		ep &= 0x7F;
+		*(USB_EP[ep].REG)
+            = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | (stall ? USB_EP_TX_STALL : USB_EP_TX_NAK);
+
+		/* Reset to DATA0 if clearing stall condition. */
+		if (!stall) {
+			*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EPTX_DTOG1 | USB_EPTX_DTOG2);
+		}
+	} else {
+		/* Reset to DATA0 if clearing stall condition. */
+		if (!stall) {
+			*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EPRX_DTOG1 | USB_EPRX_DTOG2);
+		}
+
+		*(USB_EP[ep].REG)
+            = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | (stall ? USB_EP_RX_STALL : USB_EP_RX_NAK);
+	}
+}
+
+/**
+ * Set an Out endpoint to NAK
+ * 
+ * @param dev USB device handle structure
+ * @param ep  EP address
+ * @param nak If non-zero, set NAK
+ */
+static void st_usb_ep_nak_set(usb_device_t *dev, uint8_t ep, bool nak)
+{
+    (void) dev;
+	if (ep & 0x80) {
+		return;
+	}
+
+	st_usb_force_nak[ep] = nak;
+
+    *(USB_EP[ep].REG)
+        = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | (nak ? USB_EP_RX_NAK : USB_EP_RX_VALID);
+}
+
+/**
+ * Write a packet to endpoint
+ * 
+ * @param dev USB device handle structure
+ * @param ep  EP address (direction is ignored)
+ * @param buf pointer to user data to write
+ * @param len # of bytes
+ * @return Actual # of bytes read
+ */
+static uint16_t st_usb_ep_wr_packet(usb_device_t *dev, uint8_t ep, const void *buf, uint16_t len)
+{
+    (void) dev;
+	ep &= 0x7F;
+
+	if ((*(USB_EP[ep].REG) & USB_EPTX_STAT) == USB_EP_TX_VALID) {
+		return 0;
+	}
+
+	_st_usb_copy_buf_to_pm(USB_EP[ep].TX_BUFF, buf, len);
+	*(USB_EP[ep].TX_COUNT) = len;
+	*(USB_EP[ep].REG) = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_VALID;
+
+	return len;
+}
+
+/**
+ * Read a packet from endpoint
+ * 
+ * @param dev USB device handle structure
+ * @param ep  EP address (direction is ignored)
+ * @param buf user buffer that will receive data
+ * @param len # of bytes
+ * @return Actual # of bytes read
+ */
+static uint16_t st_usb_ep_rd_packet(usb_device_t *dev, uint8_t ep, void *buf, uint16_t len)
+{
+    (void) dev;
+	if ((*(USB_EP[ep].REG) & USB_EPRX_STAT) == USB_EP_RX_VALID) {
+		return 0;
+	}
+
+	len = MIN(*(USB_EP[ep].RX_COUNT) & 0x3FF, len);
+
+	_st_usb_copy_pm_to_buf(buf, USB_EP[ep].RX_BUFF, len);
+	*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EP_CTR_RX);
+
+	if (!st_usb_force_nak[ep]) {
+		*(USB_EP[ep].REG) = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_VALID;
+	}
+
+	return len;
+}
+
+/**
+ * Dispatch interrupts
+ * 
+ * @param dev USB device handle structure
+ */
+static void st_usb_poll(usb_device_t *dev)
+{
+	(void) dev;
+	uint16_t istr = USB->ISTR;
+
+	if (istr & USB_ISTR_RESET) {
+		USB->ISTR &= ~USB_ISTR_RESET;
+		dev->pm_top = USB_PM_TOP;
+		usb_reset(dev);
+		return;
+	}
+
+	if (istr & USB_ISTR_CTR) {
+		uint8_t ep = istr & USB_ISTR_EP_ID;
+		uint8_t type;
+
+		if (istr & USB_ISTR_DIR) {
+			if (*(USB_EP[ep].REG) & USB_EP_SETUP) {
+				type = USB_TRANSACTION_SETUP;
+				st_usb_ep_rd_packet(dev, ep, &dev->control.req, 8);
+			} else {
+				type = USB_TRANSACTION_OUT;
+			}
+		} else {
+			type = USB_TRANSACTION_IN;
+			*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EP_CTR_TX);
+		}
+
+		if (dev->cb_endpoint[ep][type]) {
+			dev->cb_endpoint[ep][type] (dev, ep);
+		} else {
+			*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EP_CTR_RX);
+		}
+	}
+
+	if (istr & USB_ISTR_SUSP) {
+		USB->ISTR &= ~USB_ISTR_SUSP;
+		if (dev->cb_suspend) {
+			dev->cb_suspend();
+		}
+	}
+
+	if (istr & USB_ISTR_WKUP) {
+		USB->ISTR &= ~USB_ISTR_WKUP;
+		if (dev->cb_resume) {
+			dev->cb_resume();
+		}
+	}
+
+	if (istr & USB_ISTR_SOF) {
+		USB->ISTR &= ~USB_ISTR_SOF;
+		if (dev->cb_sof) {
+			dev->cb_sof();
+		}
+	}
+
+	if (dev->cb_sof) {
+		USB->CNTR |= USB_CNTR_SOFM;
+	} else {
+		USB->CNTR &= ~USB_CNTR_SOFM;
+	}
+}
+
 usb_driver_t st_usb_driver = {
-    .init        = st_usb_init,
-    .set_address = st_usb_set_address,
-    .ep_setup    = st_usb_ep_setup,
+    .init         = st_usb_init,
+    .set_address  = st_usb_set_address,
+    .ep_setup     = st_usb_ep_setup,
+    .ep_reset     = st_usb_ep_reset,
+    .ep_stall_get = st_usb_ep_stall_get,
+    .ep_stall_set = st_usb_ep_stall_set,
+    .ep_nak_set   = st_usb_ep_nak_set,
+    .ep_wr_packet = st_usb_ep_wr_packet,
+    .ep_rd_packet = st_usb_ep_rd_packet,
+    .poll         = st_usb_poll,
+    .disconnect   = NULL, // Not supported for now
 };
