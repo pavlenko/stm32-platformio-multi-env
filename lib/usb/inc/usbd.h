@@ -253,7 +253,8 @@ typedef struct usb_device_s {
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 
-void usbd_init(usb_device_t *dev);
+//TODO rename to setup
+void usbd_setup(usb_device_t *dev);
 
 /**
  * Register a custom set configuration request callback
@@ -284,7 +285,12 @@ bool usb_register_cb_set_interface(usb_device_t *dev, usb_cb_set_interface_t cb)
  */
 bool usb_register_cb_control(usb_device_t *dev, uint8_t type, uint8_t mask, usb_cb_control_t cb);
 
-void usb_reset(usb_device_t *dev);//TODO private
+/**
+ * Reset device to initial state
+ * 
+ * @param dev  USB device handle structure
+ */
+void usb_reset(usb_device_t *dev);
 
 #ifdef __cplusplus
 }

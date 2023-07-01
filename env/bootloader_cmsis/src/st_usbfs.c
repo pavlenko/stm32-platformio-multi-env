@@ -6,7 +6,8 @@
 /* Private typedef -----------------------------------------------------------*/
 
 /* Endpoint related registers structure */
-typedef struct {
+//TODO check valid!!!
+typedef struct st_usb_endpoint_s {
 	__IO uint16_t *REG;      // USB_BASE + n*4
 	__IO uint16_t *TX_ADDR;  // USB_BASE + 0x50 + n*8 + 0
 	__IO uint16_t *TX_COUNT; // USB_BASE + 0x50 + n*8 + 2

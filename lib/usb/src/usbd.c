@@ -12,13 +12,13 @@
 /* Extern function prototypes ------------------------------------------------*/
 /* Function definitions ------------------------------------------------------*/
 
-void usbd_init(usb_device_t *dev)
+void usbd_setup(usb_device_t *dev)
 {
     dev->driver->init();
 
-    dev->cb_endpoint[0][USB_TRANSACTION_SETUP] = usb_control_setup;
-	dev->cb_endpoint[0][USB_TRANSACTION_OUT]   = usb_control_out;
-	dev->cb_endpoint[0][USB_TRANSACTION_IN]    = usb_control_in;
+    dev->cb_endpoint[0][USB_TRANSACTION_SETUP] = _usb_control_setup;
+	dev->cb_endpoint[0][USB_TRANSACTION_OUT]   = _usb_control_out;
+	dev->cb_endpoint[0][USB_TRANSACTION_IN]    = _usb_control_in;
 
 	uint8_t i;
 	for (i = 0; i < USB_MAX_CB_SET_CONFIGURATION; i++) {

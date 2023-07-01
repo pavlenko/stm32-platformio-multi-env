@@ -70,7 +70,7 @@ static void usb_stall_transaction(usb_device_t *dev)
     dev->control.state = USB_STATE_IDLE;
 }
 
-usb_result_t usb_control_request_dispatch(usb_device_t *dev, usb_request_t *req)
+static usb_result_t usb_control_request_dispatch(usb_device_t *dev, usb_request_t *req)
 {
     // uint8_t i;
     // usb_result_t result;
@@ -143,7 +143,7 @@ static void usb_control_setup_wr(usb_device_t *dev, usb_request_t *req)
     dev->driver->ep_nak_set(dev, 0, 0);
 }
 
-void usb_control_setup(usb_device_t *dev, uint8_t ep)
+void _usb_control_setup(usb_device_t *dev, uint8_t ep)
 {
     (void) ep;
 
@@ -157,7 +157,7 @@ void usb_control_setup(usb_device_t *dev, uint8_t ep)
     }
 }
 
-void usb_control_out(usb_device_t *dev, uint8_t ep)
+void _usb_control_out(usb_device_t *dev, uint8_t ep)
 {
     (void) ep;
 
@@ -196,7 +196,7 @@ void usb_control_out(usb_device_t *dev, uint8_t ep)
     }
 }
 
-void usb_control_in(usb_device_t *dev, uint8_t ep)
+void _usb_control_in(usb_device_t *dev, uint8_t ep)
 {
     (void) ep;
     usb_request_t *req = &(dev->control.req);
@@ -207,7 +207,7 @@ void usb_control_in(usb_device_t *dev, uint8_t ep)
             break;
         case USB_STATE_LAST_DATA_IN:
             dev->control.state = USB_STATE_STATUS_OUT;
-            usb_ep_nak_set(dev, 0, 0);
+            dev->driver->ep_nak_set(dev, 0, 0);
             break;
         case USB_STATE_STATUS_IN:
             if (dev->control.complete_cb) {
@@ -216,7 +216,7 @@ void usb_control_in(usb_device_t *dev, uint8_t ep)
 
             /* Exception: Handle SET ADDRESS function here... */
             if ((req->bmRequestType == 0) && (req->bRequest == USB_REQUEST_SET_ADDRESS)) {
-                //TODO dev->driver->set_address(dev, req->wValue);
+                dev->driver->set_address(dev, req->wValue);
             }
             dev->control.state = USB_STATE_IDLE;
             break;

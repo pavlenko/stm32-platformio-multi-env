@@ -54,7 +54,7 @@ void dfu_memory_write_uint16(uint32_t address, uint16_t data)
 }
 
 int main(void) {
-    usbd_init(&usb_device);
+    usbd_setup(&usb_device);
     while (1) {
 		st_usb_driver.poll(&usb_device);
     }
