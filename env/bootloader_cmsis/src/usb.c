@@ -1,6 +1,16 @@
 #include "usb.h"
 
+/* Includes ------------------------------------------------------------------*/
 #include <usb_dfu.h>
+
+/* Private typedef -----------------------------------------------------------*/
+/* Private define ------------------------------------------------------------*/
+/* Private macro -------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
+/* Private function prototypes -----------------------------------------------*/
+/* External function prototypes ----------------------------------------------*/
+/* External variables --------------------------------------------------------*/
+/* Function definitions ------------------------------------------------------*/
 
 dfu_functional_descriptor_t dfu_functional_descriptor = {
     .bLength         = sizeof(dfu_functional_descriptor_t),
@@ -17,7 +27,7 @@ usb_interface_descriptor_t dfu_interface_descriptor = {
     .bInterfaceNumber   = 0x00,
     .bAlternateSetting  = 0x00,
     .bNumEndpoints      = 0x00,
-    .bInterfaceClass    = 0xFE, // DFU Class
+    .bInterfaceClass    = USB_CLASS_APPLICATION_SPECIFIC, // DFU Class
     .bInterfaceSubClass = 0x01,
     .bInterfaceProtocol = 0x02,
     .iInterface         = 0x04,

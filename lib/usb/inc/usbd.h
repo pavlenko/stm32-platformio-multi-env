@@ -34,7 +34,8 @@ typedef enum usb_state_e {
     USB_STATE_STATUS_OUT,
 } usb_state_t;
 
-typedef enum _usbd_transaction {
+/* USB transactiontype, used in endpoints callback map */
+typedef enum usbd_transaction_e {
 	USB_TRANSACTION_IN,
 	USB_TRANSACTION_OUT,
 	USB_TRANSACTION_SETUP,
@@ -120,6 +121,104 @@ typedef struct usb_control_s {
     void *complete_arg;//TODO are this needed???
     bool needs_zlp;
 } usb_control_t;
+
+/* Hardware specific driver */
+typedef struct usb_driver_s {
+    /**
+     * Initialize HW
+     */
+    usb_device_t *(*init)(void);
+
+    /**
+     * Set an address
+     * 
+     * @param dev  USB device handle structure
+     * @param addr Device assigned address
+     */
+	void (*set_address)(usb_device_t *dev, uint8_t addr);
+
+    /**
+     * Setup an endpoint
+     * 
+     * @param dev      USB device handle structure
+     * @param addr     Full EP address including direction (e.g. 0x01 or 0x81)
+     * @param type     Value for bmAttributes (USB_ENDPOINT_*)
+     * @param max_size Endpoint max size
+     * @param cb       Callback to execute
+     */
+	void (*ep_setup)(usb_device_t *dev, uint8_t addr, uint8_t type, uint16_t max_size, usb_cb_endpoint_t cb);
+
+    /**
+     * Reset all endpoints
+     * 
+     * @param dev  USB device handle structure
+     */
+	void (*ep_reset)(usb_device_t *dev);
+
+    /**
+     * Get STALL status of an endpoint
+     * 
+     * @param dev  USB device handle structure
+     * @param addr Full EP address (with direction bit)
+     * @return Non-zero if endpoint is stalled 
+     */
+    bool (*ep_stall_get)(usb_device_t *dev, uint8_t addr);
+
+    /**
+     * Set/clr STALL condition on an endpoint
+     * 
+     * @param dev   USB device handle structure
+     * @param addr  Full EP address (with direction bit)
+     * @param stall If 0, clear STALL, else set stall.
+     */
+	void (*ep_stall_set)(usb_device_t *dev, uint8_t addr, bool stall);
+
+    /**
+     * Set an Out endpoint to NAK
+     * 
+     * @param dev  USB device handle structure
+     * @param addr EP address
+     * @param nak  If non-zero, set NAK
+     */
+	void (*ep_nak_set)(usb_device_t *dev, uint8_t addr, bool nak);
+
+    /**
+     * Write a packet to endpoint
+     * 
+     * @param dev  USB device handle structure
+     * @param addr EP address (direction is ignored)
+     * @param buf  pointer to user data to write
+     * @param len  # of bytes
+     * @return Actual # of bytes read
+     */
+	uint16_t (*ep_wr_packet)(usb_device_t *dev, uint8_t addr, const void *buf, uint16_t len);
+
+    /**
+     * Read a packet from endpoint
+     * 
+     * @param dev  USB device handle structure
+     * @param addr EP address (direction is ignored)
+     * @param buf  user buffer that will receive data
+     * @param len  # of bytes
+     * @return Actual # of bytes read
+     */
+	uint16_t (*ep_rd_packet)(usb_device_t *dev, uint8_t addr, void *buf, uint16_t len);
+
+    /**
+     * Dispatch interrupts
+     * 
+     * @param dev USB device handle structure
+     */
+	void (*poll)(usb_device_t *dev);
+
+    /**
+     * Disconnect device handler
+     * 
+     * @param dev USB device handle structure
+     * @param disconnected Disconnected flag
+     */
+	void (*disconnect)(usb_device_t *dev, bool disconnected);
+} usb_driver_t;
 
 //TODO move to private, maybe
 typedef struct usb_device_s {
