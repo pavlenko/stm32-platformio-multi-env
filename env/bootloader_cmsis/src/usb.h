@@ -1,12 +1,14 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __TEMPLATE_H__
-#define __TEMPLATE_H__
+#ifndef __USB_H__
+#define __USB_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#include <usbd.h>
+
 /* Private includes ----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -19,4 +21,4 @@ extern "C" {
 }
 #endif
 
-#endif // __TEMPLATE_H__
+#endif // __USB_H__
