@@ -6,7 +6,7 @@
 /* Private typedef -----------------------------------------------------------*/
 
 /* Endpoint related registers structure */
-//TODO check valid!!!
+/** @deprecated */
 typedef struct st_usb_endpoint_s {
 	__IO uint16_t *REG;      // USB_BASE + n*4
 	__IO uint16_t *TX_ADDR;  // USB_BASE + 0x50 + n*8 + 0
@@ -17,10 +17,40 @@ typedef struct st_usb_endpoint_s {
 	__IO void *RX_BUFF;
 } st_usb_endpoint_t;
 
+/* USB registers (like CMSIS but more usable) */
+typedef struct {
+	__IO uint32_t EPnR[8];
+    __IO uint32_t RESERVED[8];
+    __IO uint32_t CNTR;
+    __IO uint32_t ISTR;
+    __IO uint32_t FNR;
+    __IO uint32_t DADDR;
+    __IO uint32_t BTABLE;
+} st_usb_t;
+
+/* Btable EPn registers */
+typedef struct {
+	__IO uint32_t TX_ADDR;
+    __IO uint32_t TX_COUNT;
+    __IO uint32_t RX_ADDR;
+    __IO uint32_t RX_COUNT;
+} st_usb_epdata_t;
+
+/* Btable all EP */
+typedef struct {
+	__IO st_usb_epdata_t EP[8];
+} st_usb_btable_t;
+
 /* Private define ------------------------------------------------------------*/
 
-/* To address of USB packed memory */
+/* Top address of USB packed memory */
 #define USB_PM_TOP 0x40
+
+#define USB_BTABLE_BASE (USB_BASE + 0x00000050)
+
+/* USB helrer defines */
+#define USB_REGS   ((st_usb_t *)(USB_BASE))
+#define USB_BTABLE ((st_usb_btable_t *)(USB_BTABLE_BASE))
 
 /* Pre-calculated endpoint related BTABLE addresses */
 #define USB_EP0_BTABLE (USB_BASE + 0x50 + 0x00)
@@ -35,21 +65,8 @@ typedef struct st_usb_endpoint_s {
 /* Private macro -------------------------------------------------------------*/
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
-#define USB_IO(addr) ((__IO uint16_t *)(addr))
 
 /* Private variables ---------------------------------------------------------*/
-
-/* Helper array with define all endpoints structures */
-static const st_usb_endpoint_t USB_EP[8] = {
-	{USB_IO(USB_EP0R), USB_IO(USB_EP0_BTABLE), USB_IO(USB_EP0_BTABLE + 2), USB_IO(USB_EP0_BTABLE + 4), USB_IO(USB_EP0_BTABLE + 6)},
-	{USB_IO(USB_EP2R), USB_IO(USB_EP2_BTABLE), USB_IO(USB_EP2_BTABLE + 2), USB_IO(USB_EP2_BTABLE + 4), USB_IO(USB_EP2_BTABLE + 6)},
-	{USB_IO(USB_EP1R), USB_IO(USB_EP1_BTABLE), USB_IO(USB_EP1_BTABLE + 2), USB_IO(USB_EP1_BTABLE + 4), USB_IO(USB_EP1_BTABLE + 6)},
-	{USB_IO(USB_EP3R), USB_IO(USB_EP3_BTABLE), USB_IO(USB_EP3_BTABLE + 2), USB_IO(USB_EP3_BTABLE + 4), USB_IO(USB_EP3_BTABLE + 6)},
-	{USB_IO(USB_EP4R), USB_IO(USB_EP4_BTABLE), USB_IO(USB_EP4_BTABLE + 2), USB_IO(USB_EP4_BTABLE + 4), USB_IO(USB_EP4_BTABLE + 6)},
-	{USB_IO(USB_EP5R), USB_IO(USB_EP5_BTABLE), USB_IO(USB_EP5_BTABLE + 2), USB_IO(USB_EP5_BTABLE + 4), USB_IO(USB_EP5_BTABLE + 6)},
-	{USB_IO(USB_EP6R), USB_IO(USB_EP6_BTABLE), USB_IO(USB_EP6_BTABLE + 2), USB_IO(USB_EP6_BTABLE + 4), USB_IO(USB_EP6_BTABLE + 6)},
-	{USB_IO(USB_EP7R), USB_IO(USB_EP7_BTABLE), USB_IO(USB_EP7_BTABLE + 2), USB_IO(USB_EP7_BTABLE + 4), USB_IO(USB_EP7_BTABLE + 6)},
-};
 
 static bool st_usb_force_nak[8] = {0};
 
@@ -94,7 +111,7 @@ static uint16_t _st_usb_set_ep_rx_bufsize(uint8_t ep, uint32_t size)
 	}
 
 	/* write to the BL_SIZE and NUM_BLOCK fields */
-    *(USB_EP[ep].RX_COUNT) = size << 10;
+    USB_BTABLE->EP[ep].RX_COUNT = size << 10;
 
 	return realsize;
 }
@@ -158,13 +175,21 @@ static usb_device_t* st_usb_init(void)
     /* Enable USB clock */
     RCC->APB1ENR |= RCC_APB1ENR_USBEN;
 
+	/* Force USB reset */
+	USB_REGS->CNTR = USB_CNTR_FRES;
+	for(uint32_t ctr = 0; ctr < 72000; ++ctr) __NOP(); // wait >1ms
+
     /* Reset registers */
-    USB->CNTR   = 0;// TODO are this needed
-    USB->BTABLE = 0;
-    USB->ISTR   = 0;
+    USB_REGS->CNTR   = 0;// TODO are this needed
+    USB_REGS->BTABLE = 0;
+	USB_REGS->DADDR  = 0;
+    USB_REGS->ISTR   = 0;
 
     /* Enable RESET, SUSPEND, RESUME and CTR interrupts. */
-    USB->CNTR = USB_CNTR_RESETM | USB_CNTR_CTRM | USB_CNTR_SUSPM | USB_CNTR_WKUPM;
+    USB_REGS->CNTR = USB_CNTR_RESETM | USB_CNTR_CTRM | USB_CNTR_SUSPM | USB_CNTR_WKUPM;
+
+	/* Enable USB interrupts */
+	// NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
     return NULL;
 }
 
@@ -177,7 +202,7 @@ static usb_device_t* st_usb_init(void)
 static void st_usb_set_address(usb_device_t *dev, uint8_t addr)
 {
     (void) dev;
-    USB->DADDR = (addr & USB_DADDR_ADD) | USB_DADDR_EF;
+    USB_REGS->DADDR = (addr & USB_DADDR_ADD) | USB_DADDR_EF;
 }
 
 /**
@@ -194,32 +219,32 @@ static void st_usb_ep_setup(usb_device_t *dev, uint8_t ep, uint8_t type, uint16_
 	uint8_t dir = ep & 0x80;
 	ep &= 0x7F;
 
-    *(USB_EP[ep].REG) = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPADDR_FIELD)) | ep;
-    *(USB_EP[ep].REG) = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EP_T_FIELD)) | (type << USB_EP_T_FIELD_Pos);
+    USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPADDR_FIELD)) | ep;
+    USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EP_T_FIELD)) | (type << USB_EP_T_FIELD_Pos);
 	
 	if (dir || ep == 0) {
-		*(USB_EP[ep].TX_ADDR) = dev->pm_top;
+		USB_BTABLE->EP[ep].TX_ADDR = dev->pm_top;
 
 		if (cb) {
 			dev->cb_endpoint[ep][USB_TRANSACTION_IN] = (void *) cb;
 		}
 
-		*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EPTX_DTOG1 | USB_EPTX_DTOG2);
-		*(USB_EP[ep].REG) = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_NAK;
+		USB_REGS->EPnR[ep] = USB_REGS->EPnR[ep] & (USB_EPREG_MASK | USB_EPTX_DTOG1 | USB_EPTX_DTOG2);
+		USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_NAK;
 		dev->pm_top += max_size;
 	}
 
 	if (!dir) {
 		uint16_t realsize = 0;
-		*(USB_EP[ep].RX_ADDR) = dev->pm_top;
+		USB_BTABLE->EP[ep].RX_ADDR = dev->pm_top;
 		realsize = _st_usb_set_ep_rx_bufsize(ep, max_size);
 		
         if (cb) {
 			dev->cb_endpoint[ep][USB_TRANSACTION_OUT] = (void *) cb;
 		}
 
-		*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EPRX_DTOG1 | USB_EPRX_DTOG2);
-		*(USB_EP[ep].REG) = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_VALID;
+		USB_REGS->EPnR[ep] = USB_REGS->EPnR[ep] & (USB_EPREG_MASK | USB_EPRX_DTOG1 | USB_EPRX_DTOG2);
+		USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_VALID;
 		dev->pm_top += realsize;
 	}
 }
@@ -235,8 +260,8 @@ static void st_usb_ep_reset(usb_device_t *dev)
 	uint8_t i;
 
 	for (i = 1; i < 8; i++) {
-		*(USB_EP[i].REG) = (*(USB_EP[i].REG) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_DIS;
-		*(USB_EP[i].REG) = (*(USB_EP[i].REG) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_DIS;
+		USB_REGS->EPnR[i] = (USB_REGS->EPnR[i] & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_DIS;
+		USB_REGS->EPnR[i] = (USB_REGS->EPnR[i] & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_DIS;
 	}
 
 	dev->pm_top = USB_PM_TOP + (2 * dev->device_descr->bMaxPacketSize0);
@@ -253,9 +278,9 @@ static bool st_usb_ep_stall_get(usb_device_t *dev, uint8_t ep)
 {
     (void) dev;
 	if (ep & 0x80) {
-		return (*(USB_EP[ep & 0x7F].REG) & USB_EPTX_STAT) == USB_EP_TX_STALL;
+		return (USB_REGS->EPnR[ep & 0x7F] & USB_EPTX_STAT) == USB_EP_TX_STALL;
 	} else {
-		return (*(USB_EP[ep].REG) & USB_EPRX_STAT) == USB_EP_RX_STALL;
+		return (USB_REGS->EPnR[ep] & USB_EPRX_STAT) == USB_EP_RX_STALL;
 	}
 }
 
@@ -270,27 +295,27 @@ static void st_usb_ep_stall_set(usb_device_t *dev, uint8_t ep, bool stall)
 {
     (void) dev;
 	if (ep == 0) {
-		*(USB_EP[ep].REG)
-            = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | (stall ? USB_EP_TX_STALL : USB_EP_TX_NAK);
+		USB_REGS->EPnR[ep]
+            = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | (stall ? USB_EP_TX_STALL : USB_EP_TX_NAK);
 	}
 
 	if (ep & 0x80) {
 		ep &= 0x7F;
-		*(USB_EP[ep].REG)
-            = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | (stall ? USB_EP_TX_STALL : USB_EP_TX_NAK);
+		USB_REGS->EPnR[ep]
+            = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | (stall ? USB_EP_TX_STALL : USB_EP_TX_NAK);
 
 		/* Reset to DATA0 if clearing stall condition. */
 		if (!stall) {
-			*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EPTX_DTOG1 | USB_EPTX_DTOG2);
+			USB_REGS->EPnR[ep] = USB_REGS->EPnR[ep] & (USB_EPREG_MASK | USB_EPTX_DTOG1 | USB_EPTX_DTOG2);
 		}
 	} else {
 		/* Reset to DATA0 if clearing stall condition. */
 		if (!stall) {
-			*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EPRX_DTOG1 | USB_EPRX_DTOG2);
+			USB_REGS->EPnR[ep] = USB_REGS->EPnR[ep] & (USB_EPREG_MASK | USB_EPRX_DTOG1 | USB_EPRX_DTOG2);
 		}
 
-		*(USB_EP[ep].REG)
-            = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | (stall ? USB_EP_RX_STALL : USB_EP_RX_NAK);
+		USB_REGS->EPnR[ep]
+            = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | (stall ? USB_EP_RX_STALL : USB_EP_RX_NAK);
 	}
 }
 
@@ -310,8 +335,8 @@ static void st_usb_ep_nak_set(usb_device_t *dev, uint8_t ep, bool nak)
 
 	st_usb_force_nak[ep] = nak;
 
-    *(USB_EP[ep].REG)
-        = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | (nak ? USB_EP_RX_NAK : USB_EP_RX_VALID);
+    USB_REGS->EPnR[ep]
+        = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | (nak ? USB_EP_RX_NAK : USB_EP_RX_VALID);
 }
 
 /**
@@ -328,13 +353,15 @@ static uint16_t st_usb_ep_wr_packet(usb_device_t *dev, uint8_t ep, const void *b
     (void) dev;
 	ep &= 0x7F;
 
-	if ((*(USB_EP[ep].REG) & USB_EPTX_STAT) == USB_EP_TX_VALID) {
+	if ((USB_REGS->EPnR[ep] & USB_EPTX_STAT) == USB_EP_TX_VALID) {
 		return 0;
 	}
 
-	_st_usb_copy_buf_to_pm(USB_EP[ep].TX_BUFF, buf, len);
-	*(USB_EP[ep].TX_COUNT) = len;
-	*(USB_EP[ep].REG) = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_VALID;
+	//TODO check valid ptr
+	_st_usb_copy_buf_to_pm((__IO uint16_t *)(USB_BTABLE_BASE + USB_BTABLE->EP[ep].TX_ADDR * 2), buf, len);
+	
+	USB_BTABLE->EP[ep].TX_COUNT = len;
+	USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_VALID;
 
 	return len;
 }
@@ -351,17 +378,18 @@ static uint16_t st_usb_ep_wr_packet(usb_device_t *dev, uint8_t ep, const void *b
 static uint16_t st_usb_ep_rd_packet(usb_device_t *dev, uint8_t ep, void *buf, uint16_t len)
 {
     (void) dev;
-	if ((*(USB_EP[ep].REG) & USB_EPRX_STAT) == USB_EP_RX_VALID) {
+	if ((USB_REGS->EPnR[ep] & USB_EPRX_STAT) == USB_EP_RX_VALID) {
 		return 0;
 	}
 
-	len = MIN(*(USB_EP[ep].RX_COUNT) & 0x3FF, len);
+	len = MIN(USB_BTABLE->EP[ep].RX_COUNT & 0x3FF, len);
 
-	_st_usb_copy_pm_to_buf(buf, USB_EP[ep].RX_BUFF, len);
-	*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EP_CTR_RX);
+	_st_usb_copy_pm_to_buf(buf, (__IO uint16_t *)(USB_BTABLE_BASE + USB_BTABLE->EP[ep].RX_ADDR * 2), len);
+	
+	USB_REGS->EPnR[ep] = USB_REGS->EPnR[ep] & (USB_EPREG_MASK | USB_EP_CTR_RX);
 
 	if (!st_usb_force_nak[ep]) {
-		*(USB_EP[ep].REG) = (*(USB_EP[ep].REG) & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_VALID;
+		USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_VALID;
 	}
 
 	return len;
@@ -375,10 +403,10 @@ static uint16_t st_usb_ep_rd_packet(usb_device_t *dev, uint8_t ep, void *buf, ui
 static void st_usb_poll(usb_device_t *dev)
 {
 	(void) dev;
-	uint16_t istr = USB->ISTR;
+	uint16_t istr = USB_REGS->ISTR;
 
 	if (istr & USB_ISTR_RESET) {
-		USB->ISTR &= ~USB_ISTR_RESET;
+		USB_REGS->ISTR &= ~USB_ISTR_RESET;
 		dev->pm_top = USB_PM_TOP;
 		usb_reset(dev);
 		return;
@@ -389,7 +417,7 @@ static void st_usb_poll(usb_device_t *dev)
 		uint8_t type;
 
 		if (istr & USB_ISTR_DIR) {
-			if (*(USB_EP[ep].REG) & USB_EP_SETUP) {
+			if (USB_REGS->EPnR[ep] & USB_EP_SETUP) {
 				type = USB_TRANSACTION_SETUP;
 				st_usb_ep_rd_packet(dev, ep, &dev->control.req, 8);
 			} else {
@@ -397,41 +425,41 @@ static void st_usb_poll(usb_device_t *dev)
 			}
 		} else {
 			type = USB_TRANSACTION_IN;
-			*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EP_CTR_TX);
+			USB_REGS->EPnR[ep] = USB_REGS->EPnR[ep] & (USB_EPREG_MASK | USB_EP_CTR_TX);
 		}
 
 		if (dev->cb_endpoint[ep][type]) {
 			dev->cb_endpoint[ep][type] (dev, ep);
 		} else {
-			*(USB_EP[ep].REG) = *(USB_EP[ep].REG) & (USB_EPREG_MASK | USB_EP_CTR_RX);
+			USB_REGS->EPnR[ep] = USB_REGS->EPnR[ep] & (USB_EPREG_MASK | USB_EP_CTR_RX);
 		}
 	}
 
 	if (istr & USB_ISTR_SUSP) {
-		USB->ISTR &= ~USB_ISTR_SUSP;
+		USB_REGS->ISTR &= ~USB_ISTR_SUSP;
 		if (dev->cb_suspend) {
 			dev->cb_suspend();
 		}
 	}
 
 	if (istr & USB_ISTR_WKUP) {
-		USB->ISTR &= ~USB_ISTR_WKUP;
+		USB_REGS->ISTR &= ~USB_ISTR_WKUP;
 		if (dev->cb_resume) {
 			dev->cb_resume();
 		}
 	}
 
 	if (istr & USB_ISTR_SOF) {
-		USB->ISTR &= ~USB_ISTR_SOF;
+		USB_REGS->ISTR &= ~USB_ISTR_SOF;
 		if (dev->cb_sof) {
 			dev->cb_sof();
 		}
 	}
 
 	if (dev->cb_sof) {
-		USB->CNTR |= USB_CNTR_SOFM;
+		USB_REGS->CNTR |= USB_CNTR_SOFM;
 	} else {
-		USB->CNTR &= ~USB_CNTR_SOFM;
+		USB_REGS->CNTR &= ~USB_CNTR_SOFM;
 	}
 }
 
