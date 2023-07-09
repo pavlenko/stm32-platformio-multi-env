@@ -57,6 +57,7 @@ static void dfu_cb_control_complete(usb_device_t *dev, usb_request_t *req, void 
     }
 }
 
+//TODO avoid use ptr, resolve it in other way
 usb_result_t dfu_cb_control(
     usb_device_t *dev,
     usb_request_t *req,

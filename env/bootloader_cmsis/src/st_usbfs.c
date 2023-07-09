@@ -5,18 +5,6 @@
 
 /* Private typedef -----------------------------------------------------------*/
 
-/* Endpoint related registers structure */
-/** @deprecated */
-typedef struct st_usb_endpoint_s {
-	__IO uint16_t *REG;      // USB_BASE + n*4
-	__IO uint16_t *TX_ADDR;  // USB_BASE + 0x50 + n*8 + 0
-	__IO uint16_t *TX_COUNT; // USB_BASE + 0x50 + n*8 + 2
-	__IO uint16_t *RX_ADDR;  // USB_BASE + 0x50 + n*8 + 4
-	__IO uint16_t *RX_COUNT; // USB_BASE + 0x50 + n*8 + 6
-	__IO void *TX_BUFF;
-	__IO void *RX_BUFF;
-} st_usb_endpoint_t;
-
 /* USB registers (like CMSIS but more usable) */
 typedef struct {
 	__IO uint32_t EPnR[8];
@@ -51,16 +39,6 @@ typedef struct {
 /* USB helrer defines */
 #define USB_REGS   ((st_usb_t *)(USB_BASE))
 #define USB_BTABLE ((st_usb_btable_t *)(USB_BTABLE_BASE))
-
-/* Pre-calculated endpoint related BTABLE addresses */
-#define USB_EP0_BTABLE (USB_BASE + 0x50 + 0x00)
-#define USB_EP1_BTABLE (USB_BASE + 0x50 + 0x08)
-#define USB_EP2_BTABLE (USB_BASE + 0x50 + 0x10)
-#define USB_EP3_BTABLE (USB_BASE + 0x50 + 0x18)
-#define USB_EP4_BTABLE (USB_BASE + 0x50 + 0x20)
-#define USB_EP5_BTABLE (USB_BASE + 0x50 + 0x28)
-#define USB_EP6_BTABLE (USB_BASE + 0x50 + 0x30)
-#define USB_EP7_BTABLE (USB_BASE + 0x50 + 0x38)
 
 /* Private macro -------------------------------------------------------------*/
 
@@ -219,9 +197,12 @@ static void st_usb_ep_setup(usb_device_t *dev, uint8_t ep, uint8_t type, uint16_
 	uint8_t dir = ep & 0x80;
 	ep &= 0x7F;
 
-    USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPADDR_FIELD)) | ep;
-    USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EP_T_FIELD)) | (type << USB_EP_T_FIELD_Pos);
+    //USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPADDR_FIELD)) | ep;
+    //USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EP_T_FIELD)) | (type << USB_EP_T_FIELD_Pos);
 	
+	USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EP_T_FIELD & ~USB_EPADDR_FIELD))
+	                   | (type << USB_EP_T_FIELD_Pos) | ep;
+
 	if (dir || ep == 0) {
 		USB_BTABLE->EP[ep].TX_ADDR = dev->pm_top;
 
@@ -229,8 +210,11 @@ static void st_usb_ep_setup(usb_device_t *dev, uint8_t ep, uint8_t type, uint16_
 			dev->cb_endpoint[ep][USB_TRANSACTION_IN] = (void *) cb;
 		}
 
-		USB_REGS->EPnR[ep] = USB_REGS->EPnR[ep] & (USB_EPREG_MASK | USB_EPTX_DTOG1 | USB_EPTX_DTOG2);
-		USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_NAK;
+		//USB_REGS->EPnR[ep] = USB_REGS->EPnR[ep] & (USB_EPREG_MASK | USB_EPTX_DTOG1 | USB_EPTX_DTOG2);
+		//USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_NAK;
+
+		USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & ((USB_EPREG_MASK | USB_EPTX_DTOG1 | USB_EPTX_DTOG2) & ~USB_EPTX_STAT))
+		                   | USB_EP_TX_NAK;
 		dev->pm_top += max_size;
 	}
 
@@ -243,8 +227,11 @@ static void st_usb_ep_setup(usb_device_t *dev, uint8_t ep, uint8_t type, uint16_
 			dev->cb_endpoint[ep][USB_TRANSACTION_OUT] = (void *) cb;
 		}
 
-		USB_REGS->EPnR[ep] = USB_REGS->EPnR[ep] & (USB_EPREG_MASK | USB_EPRX_DTOG1 | USB_EPRX_DTOG2);
-		USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_VALID;
+		//USB_REGS->EPnR[ep] = USB_REGS->EPnR[ep] & (USB_EPREG_MASK | USB_EPRX_DTOG1 | USB_EPRX_DTOG2);
+		//USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_VALID;
+
+		USB_REGS->EPnR[ep] = (USB_REGS->EPnR[ep] & ((USB_EPREG_MASK | USB_EPTX_DTOG1 | USB_EPTX_DTOG2) & ~USB_EPRX_STAT))
+		                   | USB_EP_RX_VALID;
 		dev->pm_top += realsize;
 	}
 }
@@ -260,8 +247,11 @@ static void st_usb_ep_reset(usb_device_t *dev)
 	uint8_t i;
 
 	for (i = 1; i < 8; i++) {
-		USB_REGS->EPnR[i] = (USB_REGS->EPnR[i] & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_DIS;
-		USB_REGS->EPnR[i] = (USB_REGS->EPnR[i] & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_DIS;
+		//USB_REGS->EPnR[i] = (USB_REGS->EPnR[i] & (USB_EPREG_MASK & ~USB_EPTX_STAT)) | USB_EP_TX_DIS;
+		//USB_REGS->EPnR[i] = (USB_REGS->EPnR[i] & (USB_EPREG_MASK & ~USB_EPRX_STAT)) | USB_EP_RX_DIS;
+
+		USB_REGS->EPnR[i] = (USB_REGS->EPnR[i] & (USB_EPREG_MASK & ~(USB_EPRX_STAT | USB_EPTX_STAT)))
+		                  | USB_EP_RX_DIS | USB_EP_TX_DIS;
 	}
 
 	dev->pm_top = USB_PM_TOP + (2 * dev->device_descr->bMaxPacketSize0);
