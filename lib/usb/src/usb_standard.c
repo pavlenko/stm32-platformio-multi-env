@@ -297,7 +297,6 @@ static usb_result_t usb_standard_set_configuration(usb_device_t *dev, usb_reques
 
 static usb_result_t usb_stadard_get_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
-    uint8_t *cur_altsetting;
     const usb_config_descriptor_t *config_descr = &dev->config_descr[dev->current_config - 1];
 
     if (req->wIndex >= config_descr->bNumInterfaces) {
@@ -305,8 +304,9 @@ static usb_result_t usb_stadard_get_interface(usb_device_t *dev, usb_request_t *
     }
 
     *len = 1;
-    cur_altsetting = config_descr->interfaces[req->wIndex].cur_altsetting;//TODO optimize
-    (*buf)[0] = (cur_altsetting) ? *cur_altsetting : 0;
+    (*buf)[0] = (config_descr->interfaces[req->wIndex].cur_altsetting)
+        ? *config_descr->interfaces[req->wIndex].cur_altsetting
+        : 0;
 
     return USB_RESULT_HANDLED;
 }
