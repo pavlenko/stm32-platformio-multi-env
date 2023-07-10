@@ -67,6 +67,7 @@ typedef struct usb_interface_descriptor_s {
     const void *extra_ptr;
     uint8_t extra_len;
     const usb_endpoint_descriptor_t *endpoint;
+    //TODO maybe add some callback ptr here
 } __attribute__((packed)) usb_interface_descriptor_t;
 
 /* From ECN: Interface Association Descriptors, Table 9-Z */

@@ -11,20 +11,6 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-
-static usb_result_t usb_standard_get_status_device(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t usb_standard_get_status_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t usb_standard_get_status_endpoint(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-// No need for: usb_standard_clr_feature()
-// No need for: usb_standard_set_feature()
-static usb_result_t usb_standard_set_address(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t usb_standard_get_descriptor(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-// No need for: usb_set_descriptor()
-static usb_result_t usb_standard_get_configuration(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t usb_standard_set_configuration(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t usb_stadard_get_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-static usb_result_t usb_stadard_set_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len);
-
 /* Extern function prototypes ------------------------------------------------*/
 /* Function definitions ------------------------------------------------------*/
 
@@ -295,7 +281,7 @@ static usb_result_t usb_standard_set_configuration(usb_device_t *dev, usb_reques
     return USB_RESULT_HANDLED;
 }
 
-static usb_result_t usb_stadard_get_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+static usb_result_t usb_standard_get_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     const usb_config_descriptor_t *config_descr = &dev->config_descr[dev->current_config - 1];
 
@@ -311,7 +297,7 @@ static usb_result_t usb_stadard_get_interface(usb_device_t *dev, usb_request_t *
     return USB_RESULT_HANDLED;
 }
 
-static usb_result_t usb_stadard_set_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
+static usb_result_t usb_standard_set_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
     uint8_t i;
     const usb_config_descriptor_t *config_descr = &dev->config_descr[dev->current_config - 1];
@@ -388,9 +374,9 @@ static usb_result_t usb_standard_request_interface(usb_device_t *dev, usb_reques
             // Not implemented, just known
             break;
         case USB_REQUEST_GET_INTERFACE:
-            return usb_stadard_get_interface(dev, req, buf, len);
+            return usb_standard_get_interface(dev, req, buf, len);
         case USB_REQUEST_SET_INTERFACE:
-            return usb_stadard_set_interface(dev, req, buf, len);
+            return usb_standard_set_interface(dev, req, buf, len);
         case USB_REQUEST_GET_STATUS:
             return usb_standard_get_status_interface(dev, req, buf, len);
     }    
