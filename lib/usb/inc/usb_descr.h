@@ -64,7 +64,7 @@ typedef struct usb_interface_descriptor_s {
     uint8_t iInterface;
 
     /* Descriptor ends here.  The following are used internally: */
-    const void *extra_ptr;//TODO here functional descriptors array, but can be different sizes per item
+    const void *extra_ptr;
     uint8_t extra_len;
     const usb_endpoint_descriptor_t *endpoint;
 } __attribute__((packed)) usb_interface_descriptor_t;

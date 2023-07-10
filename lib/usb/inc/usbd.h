@@ -69,8 +69,7 @@ typedef usb_result_t (*usb_cb_control_t)(
     usb_request_t *req,
     uint8_t **buf,
     uint16_t *len,
-    usb_cb_control_complete_t *complete_cb,
-    void *ptr
+    usb_cb_control_complete_t *complete_cb
 );
 
 /**
@@ -107,6 +106,10 @@ typedef void (*usb_cb_endpoint_t)(usb_device_t *dev, uint8_t ep);
 
 #ifndef USB_MAX_CB_SET_CONFIGURATION
 #define USB_MAX_CB_SET_CONFIGURATION 4
+#endif
+
+#ifndef USB_MAX_CB_SET_INTERFACE
+#define USB_MAX_CB_SET_INTERFACE 4
 #endif
 
 /* Private types -------------------------------------------------------------*/
@@ -223,8 +226,8 @@ typedef struct usb_driver_s {
 //TODO move to private, maybe
 typedef struct usb_device_s {
     const usb_driver_t *driver;
-    const usb_device_descriptor_t *device_descr;
-    const usb_config_descriptor_t *config_descr;
+    usb_device_descriptor_t *device_descr;
+    usb_config_descriptor_t *config_descr;
     //const usb_string_descriptor_t *string_descr; //TODO try descriptors
     const char * const *strings;
     const uint8_t num_strings;
@@ -246,6 +249,7 @@ typedef struct usb_device_s {
 	void (*cb_sof)(void);
     usb_cb_control_t cb_control[USB_MAX_CB_CONTROL];
     usb_cb_set_configuration_t cb_set_configuration[USB_MAX_CB_SET_CONFIGURATION];
+    usb_cb_set_interface_t cb_set_interface[USB_MAX_CB_SET_INTERFACE];
 } usb_device_t;
 
 

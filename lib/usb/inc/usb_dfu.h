@@ -86,8 +86,7 @@ usb_result_t dfu_cb_control(
     usb_request_t *req,
     uint8_t **buf,
     uint16_t *len,
-    usb_cb_control_complete_t *cb,
-    void *ptr
+    usb_cb_control_complete_t *cb
 );
 
 __attribute__((weak))

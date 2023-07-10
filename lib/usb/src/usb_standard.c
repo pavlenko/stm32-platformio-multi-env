@@ -284,7 +284,7 @@ static usb_result_t usb_standard_set_configuration(usb_device_t *dev, usb_reques
 
     if (dev->cb_set_configuration[0]) {
         for (i = 0; i < USB_MAX_CB_CONTROL; i++) {
-            //dev->cb_control[i].cb = NULL;
+            dev->cb_control[i] = NULL;
         }
         
         for (i = 0; i < USB_MAX_CB_SET_CONFIGURATION; i++) {
@@ -313,8 +313,9 @@ static usb_result_t usb_stadard_get_interface(usb_device_t *dev, usb_request_t *
 
 static usb_result_t usb_stadard_set_interface(usb_device_t *dev, usb_request_t *req, uint8_t **buf, uint16_t *len)
 {
+    uint8_t i;
     const usb_config_descriptor_t *config_descr = &dev->config_descr[dev->current_config - 1];
-    const usb_interface_t *iface;
+    const usb_interface_t *interface;
 
     (void) buf;
 
@@ -322,21 +323,23 @@ static usb_result_t usb_stadard_set_interface(usb_device_t *dev, usb_request_t *
         return USB_RESULT_NOTSUPP;
     }
 
-    iface = &config_descr->interfaces[req->wIndex];
+    interface = &config_descr->interfaces[req->wIndex];
 
-    if (req->wValue >= iface->num_altsetting) {
+    if (req->wValue >= interface->num_altsetting) {
         return USB_RESULT_NOTSUPP;
     }
 
-    if (iface->cur_altsetting) {
-        *iface->cur_altsetting = req->wValue;
+    if (interface->cur_altsetting) {
+        *interface->cur_altsetting = req->wValue;
     } else if (req->wValue > 0) {
         return USB_RESULT_NOTSUPP;
     }
 
-    // if (dev->user_callback_set_altsetting) {//TODO callback???
-    //     dev->user_callback_set_altsetting(dev, req->wIndex, req->wValue);
-    // }
+    for (i = 0; i < USB_MAX_CB_SET_INTERFACE; i++) {
+        if (dev->cb_set_interface[i]) {
+            dev->cb_set_interface[i](dev, req->wIndex, req->wValue);
+        }
+    }
 
     *len = 0;
 

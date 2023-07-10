@@ -86,8 +86,7 @@ static usb_result_t usb_control_request_dispatch(usb_device_t *dev, usb_request_
                  req,
                 &(dev->control.ctrl_buf),
                 &(dev->control.ctrl_len),
-                &(dev->control.complete_cb),
-                NULL
+                &(dev->control.complete_cb)
             );
             if (result == USB_RESULT_HANDLED || result == USB_RESULT_NOTSUPP) {
                 return result;

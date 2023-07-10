@@ -63,14 +63,14 @@ usb_result_t dfu_cb_control(
     usb_request_t *req,
     uint8_t **buf,
     uint16_t *len,
-    usb_cb_control_complete_t *cb,
-    void *ptr
+    usb_cb_control_complete_t *cb
 ) {
     uint32_t bwPollTimeout = 0;
-    dfu_t *dfu = (dfu_t *) ptr;
+    dfu_t *dfu = NULL;//(dfu_t *) ptr;
     if ((req->bmRequestType & 0x7F) != DFU_DESCRIPTOR_TYPE_FUNCTIONAL) {
         return USB_RESULT_NOTSUPP;
     }
+
     switch (req->bRequest) {
         case DFU_REQUEST_DNLOAD:
             if (len == NULL || *len == 0) {
